@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Юридический помощник</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 750px; margin: 30px auto; padding: 20px; background: #fafafa; }
+        h1 { font-size: 24px; margin-bottom: 5px; }
+        .subtitle { color: #666; margin-bottom: 20px; }
+        label { display: block; margin-top: 15px; font-weight: bold; font-size: 14px; }
+        input, textarea, select { width: 100%; padding: 10px; margin-top: 5px; font-size: 16px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-family: inherit; }
+        textarea { height: 80px; resize: vertical; }
+        .row { display: flex; gap: 15px; }
+        .row > * { flex: 1; }
+        button { margin-top: 20px; padding: 14px; font-size: 17px; background: #0070f3; color: white; border: none; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; }
+        button:hover { background: #0050c0; }
+        button:disabled { background: #999; cursor: not-allowed; }
+        .btn-pdf { background: #28a745; margin-top: 10px; }
+        .btn-pdf:hover { background: #1e7e34; }
+        .result { margin-top: 25px; padding: 25px; background: white; border-radius: 6px; white-space: pre-wrap; font-size: 14px; line-height: 1.7; border: 1px solid #e0e0e0; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .error { color: #d00; }
+        #status { margin-top: 10px; font-size: 14px; color: #666; min-height: 20px; }
+        .note { font-size: 13px; color: #888; margin-top: 3px; }
+    </style>
+</head>
+<body>
+
+    <h1>⚖️ Юридический помощник</h1>
+    <p class="subtitle">Заполните форму — ИИ составит документ по вашему делу.</p>
+
+    <!-- ВЫБОР КАТЕГОРИИ -->
+    <label>Тип документа</label>
+    <select id="docType" onchange="changeForm()">
+        <option value="claim">Претензия (возврат товара / услуги)</option>
+        <option value="lawsuit">Исковое заявление в суд</option>
+        <option value="response">Ответ на претензию (если вам предъявили)</option>
+        <option value="rpn">Жалоба в Роспотребнадзор</option>
+    </select>
+
+    <!-- БЛОК: СТОРОНЫ -->
+    <label>Ваше ФИО (или название организации)</label>
+    <input id="myName" placeholder="Иванов Иван Иванович">
+
+    <label>Ваш адрес</label>
+    <input id="myAddress" placeholder="г. Москва, ул. Примерная, д. 1, кв. 1">
+
+    <div id="opponentBlock">
+        <label>Кому адресован документ (магазин, ИП, организация)</label>
+        <input id="opponent" placeholder="ООО «Мир обуви»">
+    </div>
+
+    <!-- БЛОК: СУТЬ ДЕЛА -->
+    <label>Дата события (покупки, оказания услуги, происшествия)</label>
+    <input id="date" type="date" value="2026-05-01">
+
+    <label>Опишите ситуацию (подробно: что, где, когда)</label>
+    <textarea id="situation" placeholder="Пример: 1 мая купил ботинки в магазине «Мир обуви». Через 3 дня носки лопнула кожа. Обратился в магазин — отказали, сказали ждать управляющего."></textarea>
+
+    <label>Сумма требований (если есть)</label>
+    <input id="price" placeholder="Например: 5000">
+
+    <!-- БЛОК: ДОПОЛНИТЕЛЬНО -->
+    <label>Доказательства</label>
+    <select id="evidence">
+        <option value="receipt">Есть чек</option>
+        <option value="bank">Выписка из банка</option>
+        <option value="witness">Свидетели (чека нет)</option>
+        <option value="photo">Фото / видео дефекта</option>
+        <option value="multiple">Чек + фото + свидетели</option>
+    </select>
+
+    <label>Чего хотите добиться?</label>
+    <input id="goal" placeholder="Например: вернуть деньги, обменять товар, выплатить компенсацию">
+
+    <div id="extraBlock" style="display:none;">
+        <label>Дополнительные сведения (для ответа на претензию — укажите, что требуют от вас и почему вы не согласны)</label>
+        <textarea id="extra" placeholder="Опишите, какую претензию вам прислали и на каком основании вы её отклоняете"></textarea>
+    </div>
+
+    <!-- API-КЛЮЧ -->
+    <input type="hidden" id="apiKey" value="sk-f6e401b63a4547a1ae1ca864ef35bbdc">
+
+    <!-- КНОПКИ -->
+    <button onclick="askAI()">Сформировать документ через ИИ</button>
+    <button class="btn-pdf" onclick="downloadPDF()" id="btnPdf" disabled>Скачать PDF</button>
+
+    <div id="status"></div>
+    <div id="result" class="result" style="display:none;"></div>
+
+    <script>
+        let lastDocument = '';
+
+        function changeForm() {
+            let type = document.getElementById('docType').value;
+            let extraBlock = document.getElementById('extraBlock');
+            let opponentBlock = document.getElementById('opponentBlock');
+            if (type === 'response') {
+                extraBlock.style.display = 'block';
+                opponentBlock.style.display = 'none';
+            } else {
+                extraBlock.style.display = 'none';
+                opponentBlock.style.display = 'block';
+            }
+        }
+
+        async function askAI() {
+            let btn = document.querySelector('button');
+            let status = document.getElementById('status');
+            let result = document.getElementById('result');
+            let btnPdf = document.getElementById('btnPdf');
+
+            btn.disabled = true;
+            btnPdf.disabled = true;
+            btn.textContent = 'ИИ составляет документ...';
+            status.textContent = '';
+            result.style.display = 'none';
+            lastDocument = '';
+
+            let docType = document.getElementById('docType').value;
+            let data = {
+                docType: docType,
+                myName: document.getElementById('myName').value,
+                myAddress: document.getElementById('myAddress').value,
+                opponent: document.getElementById('opponent').value,
+                date: document.getElementById('date').value,
+                situation: document.getElementById('situation').value,
+                price: document.getElementById('price').value || 'не указана',
+                evidence: document.getElementById('evidence').value,
+                goal: document.getElementById('goal').value || 'урегулировать спор',
+                extra: document.getElementById('extra').value
+            };
+
+            if (!data.situation || !data.myName) {
+                status.innerHTML = '<span class="error">Заполните минимум: «Ваше ФИО» и «Опишите ситуацию».</span>';
+                btn.disabled = false;
+                btn.textContent = 'Сформировать документ через ИИ';
+                return;
+            }
+
+            let evidenceText = {
+                receipt: 'чек имеется',
+                bank: 'оплата подтверждается выпиской из банка',
+                witness: 'чек утерян, есть свидетели',
+                photo: 'имеются фото/видео дефекта',
+                multiple: 'чек, фото дефекта и свидетели'
+            }[data.evidence];
+
+            let docNames = {
+                claim: 'претензию',
+                lawsuit: 'исковое заявление',
+                response: 'ответ на претензию',
+                rpn: 'жалобу в Роспотребнадзор'
+            };
+
+            let userMessage = `Составь ${docNames[docType]} на основе следующих данных:
+- Тип документа: ${docNames[docType]}
+- Заявитель: ${data.myName}, адрес: ${data.myAddress}
+- Адресат: ${data.opponent}
+- Дата события: ${data.date}
+- Описание ситуации: ${data.situation}
+- Сумма требований: ${data.price} руб.
+- Доказательства: ${evidenceText}
+- Цель: ${data.goal}
+${data.extra ? '- Дополнительно: ' + data.extra : ''}
+
+Используй ТОЛЬКО статьи закона из системного промпта.
+Если данных недостаточно — добавь раздел «РИСКИ».
+Начинай сразу с текста документа, без вступлений.`;
+
+            try {
+                let apiKey = document.getElementById('apiKey').value;
+                if (apiKey === 'ЗАМЕНИТЕ_ЭТОТ_ТЕКСТ_НА_ВАШ_КЛЮЧ') {
+                    throw new Error('API-ключ не вставлен. Откройте файл в Блокноте и замените текст на ваш ключ.');
+                }
+
+                let response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + apiKey
+                    },
+                    body: JSON.stringify({
+                        model: 'deepseek-chat',
+                        messages: [
+                            {
+                                role: 'system',
+                                content: `# РОЛЬ
+Ты — юридический ассистент для граждан РФ. Твоя функция: составлять проекты юридических документов (претензии, иски, ответы на претензии, жалобы в Роспотребнадзор, ходатайства) на основе ФАКТОВ от пользователя.
+
+# ПРАВИЛА
+1. Ссылайся ТОЛЬКО на статьи из раздела «ДОСТУПНЫЕ СТАТЬИ».
+2. Не придумывай адреса, реквизиты, названия госорганов.
+3. Не давай устных консультаций — только документ.
+4. Соблюдай структуру: шапка (кому/от кого), описательная часть, мотивировка (нормы права), требования, приложения.
+5. Если фактов недостаточно — добавь раздел «РИСКИ».
+6. Используй официально-деловой стиль.
+
+# ДОСТУПНЫЕ СТАТЬИ
+- ЗоЗПП: ст. 18, 19, 20, 21, 22, 23, 25, 29
+- ГК РФ: ст. 309, 310, 330, 395, 1064
+- ГПК РФ: ст. 131, 132
+- КоАП РФ: ст. 14.8 (нарушения прав потребителей)
+- Постановление Пленума ВС №17 от 28.06.2012 (о защите прав потребителей)
+
+# ФОРМАТ ВЫВОДА
+Начинай сразу с заголовка документа.
+После документа кратко перечисли:
+- Какие статьи применены.
+- Каких данных не хватило.
+- Юридические риски.`
+                            },
+                            {
+                                role: 'user',
+                                content: userMessage
+                            }
+                        ],
+                        temperature: 0.3,
+                        max_tokens: 2500
+                    })
+                });
+
+                if (!response.ok) {
+                    let err = await response.json();
+                    throw new Error(err.error?.message || 'Ошибка соединения. Код: ' + response.status);
+                }
+
+                let json = await response.json();
+                lastDocument = json.choices[0].message.content;
+
+                result.textContent = lastDocument;
+                result.style.display = 'block';
+                btnPdf.disabled = false;
+                status.textContent = '✅ Готово. Вы можете скачать документ как PDF.';
+
+            } catch (error) {
+                status.innerHTML = '<span class="error">Ошибка: ' + error.message + '</span>';
+            }
+
+            btn.disabled = false;
+            btn.textContent = 'Сформировать документ через ИИ';
+        }
+
+        function downloadPDF() {
+            if (!lastDocument) return;
+            let printWindow = window.open('', '_blank', 'width=800,height=600');
+            printWindow.document.write('<html><head><meta charset="UTF-8"><style>');
+            printWindow.document.write('body { font-family: "Times New Roman", serif; font-size: 14pt; line-height: 1.5; padding: 30px 40px; white-space: pre-wrap; }');
+            printWindow.document.write('</style></head><body>');
+            printWindow.document.write(lastDocument.replace(/\n/g, '<br>'));
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(function() {
+                printWindow.print();
+            }, 500);
+        }
+    </script>
+
+</body>
+</html>
