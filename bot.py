@@ -1,22 +1,14 @@
 import os
 import requests
-import threading
-from flask import Flask
-from telegram import Update, ReplyKeyboardMarkup
+from flask import Flask, request
+from telegram import Update, ReplyKeyboardMarkup, Bot
 from telegram.ext import Application, CommandHandler, MessageHandler, ConversationHandler, filters, ContextTypes
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 DEEPSEEK_KEY = os.environ.get("DEEPSEEK_KEY")
+RENDER_URL = os.environ.get("RENDER_EXTERNAL_URL", "")
 
 app_flask = Flask(__name__)
-
-@app_flask.route('/')
-def home():
-    return "Bot is running"
-
-def run_flask():
-    port = int(os.environ.get("PORT", 5000))
-    app_flask.run(host="0.0.0.0", port=port)
 
 DOC_TYPE, MY_NAME, OPPONENT, SITUATION = range(4)
 
@@ -89,24 +81,35 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Отменено. /start")
     return ConversationHandler.END
 
-def main():
-    app = Application.builder().token(BOT_TOKEN).build()
+# Приложение Telegram
+telegram_app = Application.builder().token(BOT_TOKEN).build()
 
-    app.add_handler(ConversationHandler(
-        entry_points=[CommandHandler("start", start)],
-        states={
-            DOC_TYPE: [MessageHandler(filters.TEXT & ~filters.COMMAND, choose_type)],
-            MY_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_my_name)],
-            OPPONENT: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_opponent)],
-            SITUATION: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_situation)],
-        },
-        fallbacks=[CommandHandler("cancel", cancel)],
-    ))
+telegram_app.add_handler(ConversationHandler(
+    entry_points=[CommandHandler("start", start)],
+    states={
+        DOC_TYPE: [MessageHandler(filters.TEXT & ~filters.COMMAND, choose_type)],
+        MY_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_my_name)],
+        OPPONENT: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_opponent)],
+        SITUATION: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_situation)],
+    },
+    fallbacks=[CommandHandler("cancel", cancel)],
+))
 
-    print("Бот запущен...")
-    app.run_polling()
+# Webhook — принимает сообщения от Telegram
+@app_flask.route('/webhook', methods=['POST'])
+async def webhook():
+    update = Update.de_json(request.get_json(force=True), telegram_app.bot)
+    await telegram_app.process_update(update)
+    return 'OK'
 
+@app_flask.route('/')
+def home():
+    return 'Bot running'
+
+# Запуск
 if __name__ == "__main__":
-    flask_thread = threading.Thread(target=run_flask)
-    flask_thread.start()
-    main()
+    if RENDER_URL:
+        bot = Bot(token=BOT_TOKEN)
+        bot.set_webhook(url=f"{RENDER_URL}/webhook")
+    port = int(os.environ.get("PORT", 5000))
+    app_flask.run(host="0.0.0.0", port=port)
