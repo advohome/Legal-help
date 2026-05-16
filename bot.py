@@ -81,6 +81,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Отменено. /start")
     return ConversationHandler.END
 
+# Приложение Telegram
 telegram_app = Application.builder().token(BOT_TOKEN).build()
 
 telegram_app.add_handler(ConversationHandler(
@@ -94,18 +95,19 @@ telegram_app.add_handler(ConversationHandler(
     fallbacks=[CommandHandler("cancel", cancel)],
 ))
 
+# Webhook — принимает сообщения от Telegram
 @app_flask.route('/webhook', methods=['POST'])
-def webhook():
+async def webhook():
     update = Update.de_json(request.get_json(force=True), telegram_app.bot)
-    telegram_app.update_queue.put_nowait(update)
+    await telegram_app.process_update(update)
     return 'OK'
 
 @app_flask.route('/')
 def home():
     return 'Bot running'
 
+# Запуск
 if __name__ == "__main__":
-    telegram_app.initialize()
     if RENDER_URL:
         bot = Bot(token=BOT_TOKEN)
         bot.set_webhook(url=f"{RENDER_URL}/webhook")
