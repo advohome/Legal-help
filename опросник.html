@@ -6,7 +6,7 @@
     <style>
         body { font-family: Arial, sans-serif; max-width: 750px; margin: 30px auto; padding: 20px; background: #fafafa; }
         h1 { font-size: 24px; margin-bottom: 5px; }
-        .subtitle { color: #666; margin-bottom: 20px; }
+        .subtitle { color: #666; margin-bottom: 10px; }
         .tabs { display: flex; gap: 0; margin-bottom: 25px; border-radius: 8px; overflow: hidden; }
         .tab { flex: 1; padding: 14px; text-align: center; cursor: pointer; font-weight: bold; font-size: 15px; background: #e9ecef; color: #555; border: none; transition: 0.2s; }
         .tab.active { background: #0070f3; color: white; }
@@ -14,9 +14,9 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         label { display: block; margin-top: 15px; font-weight: bold; font-size: 14px; }
-        input, textarea, select { width: 100%; padding: 10px; margin-top: 5px; font-size: 16px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-family: inherit; display: block; }
+        input, textarea, select { width: 100%; padding: 10px; margin-top: 5px; font-size: 16px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-family: inherit; }
         textarea { height: 80px; resize: vertical; }
-        button { margin-top: 15px; padding: 14px; font-size: 17px; color: white; border: none; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; display: block; }
+        button { margin-top: 15px; padding: 14px; font-size: 17px; color: white; border: none; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; }
         .btn-ai { background: #0070f3; }
         .btn-ai:hover { background: #0050c0; }
         .btn-ai:disabled { background: #999; cursor: not-allowed; }
@@ -30,7 +30,7 @@
         .error { color: #d00; }
         #status { margin-top: 10px; font-size: 14px; color: #666; min-height: 20px; }
         .file-info { font-size: 14px; color: #333; margin-top: 8px; }
-        hr { margin: 25px 0; border: none; border-top: 1px solid #ddd; display: block; }
+        hr { margin: 25px 0; border: none; border-top: 1px solid #ddd; }
         .section-title { font-size: 16px; font-weight: bold; color: #333; margin-top: 20px; }
         .history { margin-top: 30px; }
         .history-item { background: white; padding: 12px 15px; margin-bottom: 8px; border-radius: 6px; border: 1px solid #e0e0e0; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
@@ -49,11 +49,13 @@
     <h1>⚖️ Конструктор юридических документов</h1>
     <p class="subtitle">Выберите режим и получите готовый документ за 1 минуту.</p>
 
+    <!-- ВКЛАДКИ -->
     <div class="tabs">
         <button class="tab active" onclick="switchTab('incoming')">📥 Мне прислали документ</button>
         <button class="tab" onclick="switchTab('outgoing')">✍️ Я хочу составить документ</button>
     </div>
 
+    <!-- ==================== ВКЛАДКА 1: ВХОДЯЩИЙ ДОКУМЕНТ ==================== -->
     <div id="tab-incoming" class="tab-content active">
 
         <div class="section-title">📎 Загрузите входящий документ (фото или PDF) — поля заполнятся автоматически</div>
@@ -92,6 +94,7 @@
 
     </div>
 
+    <!-- ==================== ВКЛАДКА 2: ИСХОДЯЩИЙ ДОКУМЕНТ ==================== -->
     <div id="tab-outgoing" class="tab-content">
 
         <label>Тип документа</label>
@@ -139,9 +142,10 @@
 
     </div>
 
+    <!-- ==================== ОБЩИЕ КНОПКИ ==================== -->
     <hr>
 
-    <input type="hidden" id="apiKey" value="sk-f6e401b63a4547a1ae1ca864ef35bbdc">
+    <input type="hidden" id="apiKey" value="ВАШ_КЛЮЧ_СЮДА">
 
     <button class="btn-ai" onclick="askAI()" id="btnAi">⚡ Сформировать документ</button>
     <button class="btn-pdf" onclick="downloadPDF()" id="btnPdf" disabled>📄 Скачать PDF</button>
@@ -161,6 +165,7 @@
         let activeTab = 'incoming';
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
+        // ========== ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК ==========
         function switchTab(tab) {
             activeTab = tab;
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -176,6 +181,7 @@
             document.getElementById('result').style.display = 'none';
         }
 
+        // ========== ИСТОРИЯ ==========
         function saveToHistory(docText, docType) {
             let history = JSON.parse(localStorage.getItem('docHistory') || '[]');
             let docNamesShort = {
@@ -237,6 +243,7 @@
 
         showHistory();
 
+        // ========== ПРЕДОБРАБОТКА ==========
         function preprocessImage(file) {
             return new Promise((resolve) => {
                 let img = new Image();
@@ -265,6 +272,7 @@
             });
         }
 
+        // ========== АВТОЗАПОЛНЕНИЕ ==========
         function clearAutoBadges() {
             for (let i = 1; i <= 5; i++) {
                 let b = document.getElementById('autoBadge' + i);
@@ -276,6 +284,7 @@
             clearAutoBadges();
             let filled = [];
 
+            // Отправитель
             let senderPatterns = [
                 /(?:от|От)\s*[«"]([^«»"]+)[»"]/,
                 /(?:Заявитель|Истец|Потребитель|Покупатель|Клиент)[:\s]+([^\n]+)/i,
@@ -292,6 +301,7 @@
                 }
             }
 
+            // Получатель
             let receiverPatterns = [
                 /(?:Кому|В адрес|Получатель|Адресат)[:\s]+([^\n]+)/i,
                 /(?:ООО|ИП|АО|ЗАО)\s*[«"]([^«»"]+)[»"]/,
@@ -307,6 +317,7 @@
                 }
             }
 
+            // Дата
             let datePatterns = [
                 /(?:от|дата|Дата)[:\s]+(\d{1,2}[./]\d{1,2}[./]\d{2,4})/,
                 /(\d{1,2}[./]\d{1,2}[./]\d{2,4})\s*(?:года|г\.)?/
@@ -326,6 +337,7 @@
                 }
             }
 
+            // Сумма
             let sumPatterns = [
                 /(?:сумм[ауе]|стоимость|в размере|уплаченную)\s*[:\s]+(\d[\d\s]*)\s*(?:руб|₽|р\.)/i,
                 /(\d[\d\s]*)\s*(?:руб|₽|р\.)/
@@ -343,6 +355,7 @@
                 }
             }
 
+            // Суть требований
             if (filled.length >= 2) {
                 document.getElementById('inc_demands').value = 'Из текста претензии: ' + text.substring(0, 300).replace(/\n/g, ' ').trim() + '...';
                 document.getElementById('autoBadge4').innerHTML = '<span class="autofill-badge">авто</span>';
@@ -354,6 +367,7 @@
             }
         }
 
+        // ========== ЧТЕНИЕ ФАЙЛА ==========
         async function readFile() {
             let fileInput = document.getElementById('uploadedFile');
             let fileInfo = document.getElementById('fileInfo');
@@ -422,6 +436,7 @@
             btnOcr.disabled = false;
         }
 
+        // ========== ОТПРАВКА ==========
         async function askAI() {
             let btnAi = document.getElementById('btnAi');
             let btnPdf = document.getElementById('btnPdf');
@@ -438,6 +453,7 @@
             let docType, fullContext;
 
             if (activeTab === 'incoming') {
+                // Режим входящего документа — всегда ответ на претензию
                 docType = 'response';
                 let incText = document.getElementById('recognizedText').value.trim();
 
@@ -462,6 +478,7 @@ ${incText || '(не загружен)'}
 ${document.getElementById('inc_position').value || 'Прошу составить мотивированный ответ.'}`;
 
             } else {
+                // Режим исходящего документа
                 docType = document.getElementById('out_docType').value;
                 let evidenceText = {
                     receipt: 'чек имеется', bank: 'выписка из банка', witness: 'свидетели',
@@ -534,6 +551,7 @@ ${document.getElementById('out_situation').value || '(не указано)'}
             btnAi.textContent = '⚡ Сформировать документ';
         }
 
+        // ========== PDF ==========
         function downloadPDF() {
             if (!lastDocument) return;
             let printWindow = window.open('', '_blank', 'width=800,height=600');
@@ -545,5 +563,6 @@ ${document.getElementById('out_situation').value || '(не указано)'}
             setTimeout(() => printWindow.print(), 500);
         }
     </script>
+
 </body>
 </html>
