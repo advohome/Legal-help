@@ -313,7 +313,7 @@
                 <label>Ваш адрес</label>
                 <input id="inc_address" placeholder="г. Москва, ул. Примерная, д. 1">
                 <label>Дата входящего <span id="autoBadge3"></span></label>
-                <input id="inc_date" type="date" value="2026-05-17">
+                <input id="inc_date" type="date" value="2026-05-18">
                 <label>Суть требований <span id="autoBadge4"></span></label>
                 <textarea id="inc_demands" placeholder="Что от вас требуют и на каком основании"></textarea>
                 <label>Сумма требований <span id="autoBadge5"></span></label>
@@ -323,7 +323,6 @@
             </div>
         </div>
 
-        <input type="hidden" id="apiKey" value="ВАШ_КЛЮЧ_СЮДА">
         <div class="btn-row">
             <button class="btn-ai" onclick="askAI()" id="btnAi" style="flex:3;">⚡ Сформировать документ</button>
             <button class="btn-draft" onclick="saveDraft()" style="flex:1;">💾 Черновик</button>
@@ -358,6 +357,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
     <script>
+        const SERVER_URL = 'https://legal-server-s1dt.onrender.com/ask';
         let lastDocument = '';
         let activeTab = 'outgoing';
         let currentCategory = 'consumer';
@@ -366,7 +366,6 @@
         const FREE_LIMIT = 3;
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-        // ========== ЛИМИТ ЗАПРОСОВ ==========
         function getUsageCount() { return parseInt(localStorage.getItem('usageCount') || '0'); }
         function incrementUsage() { let c = getUsageCount() + 1; localStorage.setItem('usageCount', c); return c; }
         function isLimitReached() { return getUsageCount() >= FREE_LIMIT; }
@@ -383,7 +382,7 @@
                     buyBtn.id = 'btnBuy';
                     buyBtn.className = 'btn-limit';
                     buyBtn.textContent = '💬 Напишите нам для покупки';
-                    buyBtn.onclick = function() { window.location.href = 'mailto:your@email.com?subject=Покупка полной версии'; };
+                    buyBtn.onclick = function() { window.location.href = 'mailto:alexandrnvk@icloud.com?subject=Покупка полной версии'; };
                     btn.parentNode.insertBefore(buyBtn, btn.nextSibling);
                 }
             } else {
@@ -401,7 +400,6 @@
             return true;
         }
 
-        // ========== ТЁМНАЯ ТЕМА ==========
         function toggleTheme() {
             let html = document.documentElement;
             let btn = document.querySelector('.theme-toggle');
@@ -656,15 +654,19 @@
                 fullContext = `Составь "${docDisplayName}".\nФИО: ${document.getElementById('out_myName').value}${phoneInfo}${docInfo}\nАдрес: ${document.getElementById('out_myAddress').value}\nКому: ${document.getElementById('out_opponent').value}\n\nСитуация:\n${situation}\n\nСумма: ${document.getElementById('out_price').value || 'нет'} руб.\nЦель: ${document.getElementById('out_goal').value}\nДоказательства: ${evidenceText}${courtInfo}`;
             }
             fullContext += '\n\nНе используй символ *. Начинай сразу с текста.';
+
             try {
-                let apiKey = document.getElementById('apiKey').value.trim();
-                if (!apiKey || !apiKey.startsWith('sk-')) throw new Error('API-ключ не настроен.');
-                let response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
-                    body: JSON.stringify({ model: 'deepseek-chat', messages: [{ role: 'system', content: 'Ты — юридический конструктор РФ. Не используй *. Начинай сразу с заголовка.' }, { role: 'user', content: fullContext }], temperature: 0.3, max_tokens: 3000 })
+                let response = await fetch(SERVER_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: fullContext,
+                        system: 'Ты — юридический конструктор РФ. Не используй *. Начинай сразу с заголовка.'
+                    })
                 });
-                if (!response.ok) { let err = await response.json(); throw new Error(err.error?.message || 'Ошибка: ' + response.status); }
-                let json = await response.json(); lastDocument = json.choices[0].message.content;
+                if (!response.ok) { let err = await response.json(); throw new Error(err.error || 'Ошибка: ' + response.status); }
+                let json = await response.json();
+                lastDocument = json.result;
                 showResult(lastDocument); status.textContent = '✅ Документ готов.'; saveToHistory(lastDocument, docDisplayName);
                 window.scrollTo({ top: result.offsetTop - 80, behavior: 'smooth' });
             } catch (error) { status.innerHTML = '<span class="error">Ошибка: ' + error.message + '</span>'; }
