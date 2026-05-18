@@ -1,12 +1,13 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import requests
 import os
 
 app = Flask(__name__)
+CORS(app)
 
 DEEPSEEK_KEY = os.environ.get("DEEPSEEK_KEY")
 
-# Хранилище уникальных IP
 unique_ips = set()
 
 @app.route("/ask", methods=["POST"])
