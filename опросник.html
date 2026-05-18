@@ -89,6 +89,8 @@
         .btn-draft:hover:not(:disabled) { background: #ec971f; }
         .btn-clear { background: transparent; color: var(--text-light); border: 1px solid var(--border); box-shadow: none; font-weight: 500; }
         .btn-clear:hover { background: var(--cat-hover); color: var(--text); }
+        .btn-calc { background: #f0ad4e; color: #333; font-weight: 600; }
+        .btn-calc:hover { background: #ec971f; }
         .copied-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #2e7d32; color: white; padding: 10px 24px; border-radius: 20px; font-weight: 600; font-size: 14px; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
         .copied-toast.show { opacity: 1; }
         .limit-bar { background: #f0f4fb; border-radius: 6px; padding: 8px 12px; margin-top: 10px; font-size: 13px; color: var(--primary); text-align: center; font-weight: 500; }
@@ -102,8 +104,12 @@
         .result-text { position: relative; z-index: 1; }
         #status { margin-top: 10px; font-size: 13px; color: var(--text-light); min-height: 20px; }
         .error { color: #e74c3c; font-weight: 500; }
-        .calc-box { background: var(--calc-bg); border: 1px solid var(--calc-border); border-radius: 8px; padding: 14px; margin-top: 12px; }
-        .calc-title { font-weight: 700; color: var(--accent); font-size: 13px; margin-bottom: 8px; }
+        /* Модальное окно калькулятора */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-overlay.open { display: flex; }
+        .modal { background: var(--card); border-radius: 12px; padding: 24px; max-width: 400px; width: 90%; box-shadow: var(--shadow-lg); }
+        .modal-title { font-weight: 700; font-size: 16px; margin-bottom: 16px; color: var(--primary); }
+        .modal-close { float: right; background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-light); width: auto; padding: 0; margin: 0; }
         .calc-row { display: flex; gap: 8px; align-items: end; flex-wrap: wrap; }
         .calc-row > div { flex: 1; min-width: 90px; }
         .calc-row label { font-size: 10px; margin-top: 0; text-transform: none; letter-spacing: 0; }
@@ -150,7 +156,6 @@
             .steps { gap: 4px; }
             .step { font-size: 10px; padding: 7px 4px; }
             .step-num { font-size: 15px; }
-            .calc-row { flex-direction: column; gap: 4px; }
             .watermark { font-size: 24px; }
         }
     </style>
@@ -182,7 +187,7 @@
 
                 <div class="section-title">Выберите сферу</div>
                 <div class="category-grid" id="categoryGrid">
-                    <button class="cat-btn active" onclick="selectCategory('consumer', this)">🛒 Продавец / Покупатель</button>
+                    <button class="cat-btn active" onclick="selectCategory('consumer', this)">🛒 Продавец / Покупатель (гарантия на товар)</button>
                     <button class="cat-btn" onclick="selectCategory('insurance', this)">🚗 Страховая</button>
                     <button class="cat-btn" onclick="selectCategory('labor', this)">💼 Труд и работа</button>
                     <button class="cat-btn" onclick="selectCategory('court', this)">⚖️ Суд</button>
@@ -198,7 +203,7 @@
                 <div style="display:flex;gap:8px;flex-wrap:wrap;">
                     <div style="flex:1;min-width:140px;">
                         <label>Ваш телефон</label>
-                        <input id="out_phone" placeholder="+7 (999) 123-45-67">
+                        <input id="out_phone" placeholder="+7 (XXX) XXX-XX-XX">
                     </div>
                     <div style="flex:1;min-width:140px;">
                         <label>Номер договора / чека / полиса</label>
@@ -209,10 +214,6 @@
                 <label>Ваш адрес <span style="text-transform:none;font-weight:400;font-size:11px;color:var(--text-light);">(для определения подсудности)</span></label>
                 <input id="out_myAddress" placeholder="г. Москва, ул. Примерная, д. 1, кв. 1" onchange="detectCourt()">
                 <div class="hint" id="courtHint"></div>
-
-                <label>Кому адресован документ <span class="required-star">*</span></label>
-                <input id="out_opponent" placeholder="ООО «Мир обуви»" data-required="true">
-                <div class="hint" id="opponentHint"></div>
 
                 <hr>
 
@@ -232,11 +233,15 @@
                     </div>
                 </div>
 
-                <div class="field-label">Кто участники? <span class="example-link" onclick="fillExample('who')">Пример</span></div>
+                <div class="field-label">Кто ещё участвовал в ситуации? <span class="example-link" onclick="fillExample('who')">Пример</span></div>
                 <input id="out_who" placeholder="Продавец Петрова, управляющий Батурин А.О.">
 
                 <div class="field-label">Что вам ответили? (дословно) <span class="example-link" onclick="fillExample('answer')">Пример</span></div>
                 <input id="out_answer" placeholder="«Ничем не можем помочь, ждите экспертизу 45 дней»">
+
+                <label>Кому вы направляете документ? <span class="required-star">*</span></label>
+                <input id="out_opponent" placeholder="ООО «Мир обуви»" data-required="true">
+                <div class="hint" id="opponentHint"></div>
 
                 <div class="field-label">Дополнительная информация <span class="example-link" onclick="fillExample('extra')">Пример</span></div>
                 <textarea id="out_extra" placeholder="Любые детали: свидетели, фото, видео, переписка."></textarea>
@@ -244,15 +249,7 @@
                 <label>Сумма требований</label>
                 <input id="out_price" placeholder="Например: 5000">
 
-                <div class="calc-box">
-                    <div class="calc-title">🧮 Калькулятор неустойки (1% в день по ЗоЗПП)</div>
-                    <div class="calc-row">
-                        <div><label>Сумма долга (руб.)</label><input id="calc_debt" type="number" placeholder="5000" oninput="calcPenalty()"></div>
-                        <div><label>Дней просрочки</label><input id="calc_days" type="number" placeholder="30" oninput="calcPenalty()"></div>
-                    </div>
-                    <div class="calc-result" id="calcResult"></div>
-                    <button class="calc-apply" onclick="applyPenalty()">Применить эту сумму</button>
-                </div>
+                <button class="btn-calc" onclick="openCalculator()">🧮 Калькулятор неустойки</button>
 
                 <label>Чего хотите добиться?</label>
                 <input id="out_goal" placeholder="Вернуть деньги, отменить приказ, взыскать неустойку">
@@ -281,8 +278,8 @@
                     <p class="dict-def">Подаётся, если претензию проигнорировали.</p>
                     <p><span class="dict-term">Ходатайство</span> — просьба к суду.</p>
                     <p class="dict-def">Например: перенести заседание.</p>
-                    <p><span class="dict-term">Неустойка</span> — штраф за каждый день просрочки.</p>
-                    <p class="dict-def">Обычно 1% от суммы долга в день.</p>
+                    <p><span class="dict-term">Неустойка</span> — штраф за каждый день просрочки (1% от цены товара в день по ст. 23 ЗоЗПП).</p>
+                    <p class="dict-def">Начисляется, если продавец нарушил сроки возврата или ремонта.</p>
                     <p><span class="dict-term">Роспотребнадзор</span> — защищает потребителей.</p>
                     <p class="dict-def">Может оштрафовать магазин.</p>
                     <p><span class="dict-term">ГЖИ</span> — Госжилинспекция.</p>
@@ -347,6 +344,20 @@
         </div>
     </div>
 
+    <!-- Модальное окно калькулятора -->
+    <div class="modal-overlay" id="calcModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeCalculator()">✕</button>
+            <div class="modal-title">🧮 Калькулятор неустойки (1% в день по ЗоЗПП)</div>
+            <div class="calc-row">
+                <div><label>Сумма долга (руб.)</label><input id="calc_debt" type="number" placeholder="5000" oninput="calcPenalty()"></div>
+                <div><label>Дней просрочки</label><input id="calc_days" type="number" placeholder="30" oninput="calcPenalty()"></div>
+            </div>
+            <div class="calc-result" id="calcResult"></div>
+            <button class="calc-apply" onclick="applyPenalty()">Применить эту сумму</button>
+        </div>
+    </div>
+
     <div class="copied-toast" id="copiedToast">✅ Текст скопирован!</div>
 
     <div class="footer">
@@ -358,13 +369,13 @@
 
     <script>
         const API_KEY = 'sk-f6e401b63a4547a1ae1ca864ef35bbdc';
-        const BUY_EMAIL = 'alexandrnvk@icloud.com';
+        const BUY_EMAIL = 'alexandrnk2014@yandex.ru';
         let lastDocument = '';
         let activeTab = 'outgoing';
         let currentCategory = 'consumer';
         let detectedCourt = '';
         let calculatedPenalty = 0;
-        const FREE_LIMIT = 3;
+        const FREE_LIMIT = 5;
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
         function getUsageCount() { return parseInt(localStorage.getItem('usageCount') || '0'); }
@@ -376,7 +387,7 @@
             let bar = document.getElementById('limitBar');
             let btn = document.getElementById('btnAi');
             if (isLimitReached()) {
-                bar.innerHTML = '🔒 Лимит бесплатных документов исчерпан (3 из 3). <br><span style="color:#c0392b;">Приобретите полную версию.</span>';
+                bar.innerHTML = '🔒 Лимит бесплатных документов исчерпан (5 из 5). <br><span style="color:#c0392b;">Приобретите полную версию.</span>';
                 btn.style.display = 'none';
                 if (!document.getElementById('btnBuy')) {
                     let buyBtn = document.createElement('button');
@@ -507,13 +518,15 @@
 
         function toggleDict() { document.getElementById('dictContent').classList.toggle('open'); }
 
+        // Калькулятор в модальном окне
+        function openCalculator() { document.getElementById('calcModal').classList.add('open'); document.getElementById('calc_debt').focus(); }
+        function closeCalculator() { document.getElementById('calcModal').classList.remove('open'); }
         function calcPenalty() {
             let debt = parseFloat(document.getElementById('calc_debt').value) || 0; let days = parseInt(document.getElementById('calc_days').value) || 0;
             if (debt > 0 && days > 0) { calculatedPenalty = Math.round(debt * 0.01 * days); document.getElementById('calcResult').textContent = 'Неустойка: ' + calculatedPenalty.toLocaleString() + ' ₽'; }
             else { calculatedPenalty = 0; document.getElementById('calcResult').textContent = ''; }
         }
-
-        function applyPenalty() { if (calculatedPenalty > 0) { document.getElementById('out_price').value = calculatedPenalty; document.getElementById('calcResult').textContent = '✅ Сумма ' + calculatedPenalty.toLocaleString() + ' ₽ подставлена.'; } }
+        function applyPenalty() { if (calculatedPenalty > 0) { document.getElementById('out_price').value = calculatedPenalty; document.getElementById('calcResult').textContent = '✅ Сумма ' + calculatedPenalty.toLocaleString() + ' ₽ подставлена.'; closeCalculator(); } }
 
         function switchTab(tab) {
             activeTab = tab;
@@ -527,11 +540,11 @@
         function clearForm() {
             document.querySelectorAll('#tab-outgoing input[type="text"], #tab-outgoing textarea').forEach(el => { el.value = ''; el.classList.remove('error-field','example-text'); });
             document.getElementById('out_evidence').value = 'receipt'; document.getElementById('courtHint').textContent = '';
-            document.getElementById('calcResult').textContent = ''; calculatedPenalty = 0;
-            document.getElementById('calc_debt').value = ''; document.getElementById('calc_days').value = '';
             document.getElementById('status').textContent = ''; document.getElementById('result').style.display = 'none';
             ['btnPdf','btnPrint','btnCopy','btnEmail'].forEach(id => document.getElementById(id).disabled = true);
-            lastDocument = ''; detectedCourt = ''; localStorage.removeItem('legalDraft'); updateHints();
+            lastDocument = ''; detectedCourt = ''; calculatedPenalty = 0;
+            document.getElementById('calc_debt').value = ''; document.getElementById('calc_days').value = ''; document.getElementById('calcResult').textContent = '';
+            localStorage.removeItem('legalDraft'); updateHints();
         }
 
         function validateForm() {
@@ -647,7 +660,7 @@
                 let docInfo = docNumber ? `\nНомер договора/чека/полиса: ${docNumber}` : '';
                 fullContext = `Составь "${docDisplayName}".\nФИО: ${document.getElementById('out_myName').value}${phoneInfo}${docInfo}\nАдрес: ${document.getElementById('out_myAddress').value}\nКому: ${document.getElementById('out_opponent').value}\n\nСитуация:\n${situation}\n\nСумма: ${document.getElementById('out_price').value || 'нет'} руб.\nЦель: ${document.getElementById('out_goal').value}\nДоказательства: ${evidenceText}${courtInfo}`;
             }
-            fullContext += '\n\nНе используй символ *. Начинай сразу с текста.';
+            fullContext += '\n\nВАЖНО: Если требование связано с возвратом товара, ремонтом или услугой по ЗоЗПП, обязательно укажи в документе: «В случае отказа или нарушения сроков удовлетворения требований продавец (исполнитель) обязан выплатить неустойку в размере 1% от цены товара (услуги) за каждый день просрочки на основании ст. 23 Закона о защите прав потребителей». Не используй символ *. Начинай сразу с текста.';
 
             try {
                 let response = await fetch('https://api.deepseek.com/v1/chat/completions', {
@@ -656,7 +669,7 @@
                     body: JSON.stringify({
                         model: 'deepseek-chat',
                         messages: [
-                            { role: 'system', content: 'Ты — юридический конструктор РФ. Не используй *. Начинай сразу с заголовка.' },
+                            { role: 'system', content: 'Ты — юридический конструктор РФ. Если требование по ЗоЗПП — всегда добавляй предупреждение о неустойке 1% по ст. 23. Не используй *. Начинай сразу с заголовка.' },
                             { role: 'user', content: fullContext }
                         ],
                         temperature: 0.3,
