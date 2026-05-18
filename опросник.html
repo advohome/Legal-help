@@ -358,6 +358,7 @@
 
     <script>
         const SERVER_URL = 'https://legal-server-s1dt.onrender.com/ask';
+        const BUY_EMAIL = 'alexandrnvk@icloud.com';
         let lastDocument = '';
         let activeTab = 'outgoing';
         let currentCategory = 'consumer';
@@ -382,7 +383,7 @@
                     buyBtn.id = 'btnBuy';
                     buyBtn.className = 'btn-limit';
                     buyBtn.textContent = '💬 Напишите нам для покупки';
-                    buyBtn.onclick = function() { window.location.href = 'mailto:alexandrnvk@icloud.com?subject=Покупка полной версии'; };
+                    buyBtn.onclick = function() { window.location.href = 'mailto:' + BUY_EMAIL + '?subject=Покупка полной версии'; };
                     btn.parentNode.insertBefore(buyBtn, btn.nextSibling);
                 }
             } else {
@@ -394,15 +395,12 @@
         }
 
         function useOneRequest() {
-            if (isLimitReached()) { document.getElementById('status').innerHTML = '<span class="error">Лимит исчерпан.</span>'; return false; }
-            incrementUsage();
-            updateLimitUI();
-            return true;
+            if (isLimitReached()) { document.getElementById('status').innerHTML = '<span class="error">Лимит исчерпан. Напишите на ' + BUY_EMAIL + '</span>'; return false; }
+            incrementUsage(); updateLimitUI(); return true;
         }
 
         function toggleTheme() {
-            let html = document.documentElement;
-            let btn = document.querySelector('.theme-toggle');
+            let html = document.documentElement; let btn = document.querySelector('.theme-toggle');
             if (html.getAttribute('data-theme') === 'dark') {
                 html.setAttribute('data-theme', 'light'); btn.textContent = '🌙'; localStorage.setItem('theme', 'light');
             } else {
@@ -441,8 +439,7 @@
             if (type === 'answer') { el = document.getElementById('out_answer'); val = h.answer; }
             if (type === 'extra') { el = document.getElementById('out_extra'); val = h.extra; }
             if (el && val) {
-                el.value = val;
-                el.classList.add('example-text');
+                el.value = val; el.classList.add('example-text');
                 el.addEventListener('input', function handler() { el.classList.remove('example-text'); el.removeEventListener('input', handler); }, { once: true });
                 el.addEventListener('focus', function handler() { el.classList.remove('example-text'); el.removeEventListener('focus', handler); }, { once: true });
             }
@@ -629,10 +626,7 @@
         }
 
         async function askAI() {
-            if (activeTab === 'outgoing') {
-                if (!validateForm()) return;
-                if (!useOneRequest()) return;
-            }
+            if (activeTab === 'outgoing') { if (!validateForm()) return; if (!useOneRequest()) return; }
             let btnAi = document.getElementById('btnAi'); let status = document.getElementById('status'); let result = document.getElementById('result');
             ['btnPdf','btnPrint','btnCopy','btnEmail'].forEach(id => document.getElementById(id).disabled = true);
             btnAi.disabled = true; btnAi.textContent = '⏳ Составляем...'; status.textContent = ''; result.style.display = 'none'; lastDocument = '';
@@ -657,16 +651,11 @@
 
             try {
                 let response = await fetch(SERVER_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        message: fullContext,
-                        system: 'Ты — юридический конструктор РФ. Не используй *. Начинай сразу с заголовка.'
-                    })
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: fullContext, system: 'Ты — юридический конструктор РФ. Не используй *. Начинай сразу с заголовка.' })
                 });
                 if (!response.ok) { let err = await response.json(); throw new Error(err.error || 'Ошибка: ' + response.status); }
-                let json = await response.json();
-                lastDocument = json.result;
+                let json = await response.json(); lastDocument = json.result;
                 showResult(lastDocument); status.textContent = '✅ Документ готов.'; saveToHistory(lastDocument, docDisplayName);
                 window.scrollTo({ top: result.offsetTop - 80, behavior: 'smooth' });
             } catch (error) { status.innerHTML = '<span class="error">Ошибка: ' + error.message + '</span>'; }
@@ -684,6 +673,19 @@
         function printDocument() { if (!lastDocument) return; let w = window.open('', '_blank'); w.document.write(getPrintHTML(lastDocument)); w.document.close(); w.focus(); w.print(); }
         function copyDocument() { if (!lastDocument) return; navigator.clipboard.writeText(lastDocument.replace(/\*/g, '')).then(() => { let t = document.getElementById('copiedToast'); t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }); }
         function sendEmail() { if (!lastDocument) return; window.location.href = 'mailto:?subject=Юридический документ&body=' + encodeURIComponent(lastDocument.replace(/\*/g, '')); }
+
+        // Счётчик посетителей
+        (async function() {
+            try {
+                let r = await fetch('https://legal-server-s1dt.onrender.com/visit', { method: 'POST' });
+                let data = await r.json();
+                let counterEl = document.createElement('span');
+                counterEl.id = 'visitorCounter';
+                counterEl.style.cssText = 'font-weight:700;color:var(--accent);margin-left:6px;';
+                counterEl.textContent = '👥 ' + data.visitors;
+                document.querySelector('.footer strong').appendChild(counterEl);
+            } catch(e) {}
+        })();
     </script>
 </body>
 </html>
