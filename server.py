@@ -6,6 +6,9 @@ app = Flask(__name__)
 
 DEEPSEEK_KEY = os.environ.get("DEEPSEEK_KEY")
 
+# Хранилище уникальных IP
+unique_ips = set()
+
 @app.route("/ask", methods=["POST"])
 def ask():
     data = request.json
@@ -35,6 +38,16 @@ def ask():
         return jsonify({"result": result["choices"][0]["message"]["content"]})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route("/visit", methods=["POST"])
+def visit():
+    ip = request.remote_addr
+    unique_ips.add(ip)
+    return jsonify({"visitors": len(unique_ips)})
+
+@app.route("/visitors", methods=["GET"])
+def visitors():
+    return jsonify({"visitors": len(unique_ips)})
 
 @app.route("/")
 def home():
