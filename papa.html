@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Юрист в кармане — создание юридических документов</title>
+    <style>
+        :root {
+            --primary: #1a3a5c; --primary-light: #2c5282; --accent: #e8913a;
+            --green: #2e7d32; --green-hover: #1b5e20; --gray: #6c757d;
+            --gray-hover: #545b62; --bg: #f5f6f8; --card: #ffffff;
+            --border: #e0e4e8; --text: #2d3436; --text-light: #636e72;
+            --input-bg: #fafbfc; --shadow: 0 2px 8px rgba(0,0,0,0.06);
+            --shadow-lg: 0 4px 16px rgba(0,0,0,0.10); --transition: 0.2s ease;
+            --calc-bg: #fef9f3; --calc-border: #f0d9b5;
+            --draft-bg: #fff3cd; --draft-text: #856404;
+            --step-bg: #f0f4fb; --cat-bg: #f0f3f7; --cat-hover: #e2e8f0;
+            --cat-active-bg: #e8f0fb; --history-hover: #f0f4ff;
+            --badge-bg: #e8f5e9; --badge-text: #2e7d32;
+            --example-color: #999;
+        }
+        [data-theme="dark"] {
+            --primary: #2c5282; --primary-light: #3a6ba5; --accent: #f0a34b;
+            --green: #3a8c3f; --green-hover: #2e7d32; --gray: #8899a6;
+            --gray-hover: #9aabb8; --bg: #1a1d23; --card: #242830;
+            --border: #3a3f4b; --text: #e4e6ea; --text-light: #a0a8b4;
+            --input-bg: #2a2d35; --shadow: 0 2px 8px rgba(0,0,0,0.20);
+            --shadow-lg: 0 4px 16px rgba(0,0,0,0.30);
+            --calc-bg: #2a2520; --calc-border: #4a3f30;
+            --draft-bg: #3a3520; --draft-text: #c0a040;
+            --step-bg: #2a3040; --cat-bg: #2a2d35; --cat-hover: #353a45;
+            --cat-active-bg: #2a3a50; --history-hover: #2a3040;
+            --badge-bg: #2a3d2a; --badge-text: #5a9a5a;
+            --example-color: #777;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; transition: background 0.3s, color 0.3s; }
+        .header { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; padding: 18px 20px 16px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,0.25); position: relative; }
+        .header-logo { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+        .header-logo span { color: var(--accent); }
+        .header-sub { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+        .theme-toggle { position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.15); border: none; color: white; font-size: 20px; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; margin: 0; }
+        .theme-toggle:hover { background: rgba(255,255,255,0.25); }
+        .container { max-width: 720px; width: 100%; margin: 24px auto; padding: 0 16px; flex: 1; }
+        .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: var(--card); border-radius: 10px; padding: 5px; box-shadow: var(--shadow); }
+        .tab { flex: 1; padding: 12px 10px; text-align: center; cursor: pointer; font-weight: 600; font-size: 14px; background: transparent; color: var(--text-light); border: none; border-radius: 8px; transition: var(--transition); white-space: nowrap; }
+        .tab.active { background: var(--primary); color: white; box-shadow: var(--shadow); }
+        .tab:hover:not(.active) { background: var(--cat-hover); color: var(--text); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .card { background: var(--card); border-radius: 10px; padding: 22px 20px; box-shadow: var(--shadow); margin-bottom: 18px; transition: background 0.3s; }
+        .section-title { font-size: 15px; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
+        .steps { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+        .step { flex: 1; min-width: 55px; background: var(--step-bg); border-radius: 8px; padding: 10px 6px; text-align: center; font-size: 11px; color: var(--primary); font-weight: 600; }
+        .step-num { display: block; font-size: 18px; font-weight: 700; margin-bottom: 2px; }
+        label { display: block; margin-top: 14px; font-weight: 600; font-size: 12px; color: var(--text); text-transform: uppercase; letter-spacing: 0.4px; }
+        label .autofill-badge { display: inline-block; background: var(--badge-bg); color: var(--badge-text); padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-left: 6px; text-transform: none; letter-spacing: 0; font-weight: 500; }
+        label .example-link { font-size: 11px; color: var(--primary-light); text-decoration: underline; cursor: pointer; text-transform: none; letter-spacing: 0; font-weight: 400; margin-left: 8px; }
+        .required-star { color: #e74c3c; }
+        input, textarea, select { width: 100%; padding: 11px 13px; margin-top: 5px; font-size: 14px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--input-bg); font-family: inherit; transition: var(--transition); color: var(--text); }
+        input.example-text, textarea.example-text { color: var(--example-color); font-style: italic; }
+        input.error-field, textarea.error-field, select.error-field { border-color: #e74c3c; background: rgba(231,76,60,0.05); }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(26,58,92,0.08); background: var(--card); }
+        textarea { height: 80px; resize: vertical; }
+        select { cursor: pointer; }
+        .hint { font-size: 11px; color: var(--text-light); margin-top: 3px; }
+        .field-label { font-size: 13px; font-weight: 600; color: var(--text); margin-top: 10px; }
+        .draft-badge { display: inline-block; background: var(--draft-bg); color: var(--draft-text); padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-left: 6px; }
+        button { margin-top: 12px; padding: 12px 18px; font-size: 15px; font-weight: 600; color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%; transition: var(--transition); letter-spacing: 0.3px; }
+        button:active { transform: scale(0.98); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn-row button { flex: 1; min-width: 80px; }
+        .btn-ai { background: var(--green); box-shadow: 0 2px 6px rgba(46,125,50,0.3); }
+        .btn-ai:hover:not(:disabled) { background: var(--green-hover); }
+        .btn-limit { background: #e74c3c; box-shadow: 0 2px 6px rgba(231,76,60,0.3); cursor: pointer; }
+        .btn-limit:hover { background: #c0392b; }
+        .btn-ocr { background: var(--gray); }
+        .btn-ocr:hover:not(:disabled) { background: var(--gray-hover); }
+        .btn-pdf { background: var(--accent); }
+        .btn-pdf:hover:not(:disabled) { background: #d47f2e; }
+        .btn-print { background: #1a3a5c; }
+        .btn-print:hover:not(:disabled) { background: #2c5282; }
+        .btn-copy { background: #6c757d; }
+        .btn-copy:hover:not(:disabled) { background: #545b62; }
+        .btn-email { background: #c0392b; }
+        .btn-email:hover:not(:disabled) { background: #a93226; }
+        .btn-draft { background: #f0ad4e; }
+        .btn-draft:hover:not(:disabled) { background: #ec971f; }
+        .btn-clear { background: transparent; color: var(--text-light); border: 1px solid var(--border); box-shadow: none; font-weight: 500; }
+        .btn-clear:hover { background: var(--cat-hover); color: var(--text); }
+        .btn-calc { background: #f0ad4e; color: #333; font-weight: 600; }
+        .btn-calc:hover { background: #ec971f; }
+        .copied-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #2e7d32; color: white; padding: 10px 24px; border-radius: 20px; font-weight: 600; font-size: 14px; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+        .copied-toast.show { opacity: 1; }
+        .limit-bar { background: #f0f4fb; border-radius: 6px; padding: 8px 12px; margin-top: 10px; font-size: 13px; color: var(--primary); text-align: center; font-weight: 500; }
+        [data-theme="dark"] .limit-bar { background: #2a3040; }
+        .limit-bar span { font-weight: 700; }
+        .file-info { font-size: 13px; color: var(--text-light); margin-top: 8px; min-height: 18px; }
+        hr { margin: 20px 0; border: none; border-top: 1px solid var(--border); }
+        .result { margin-top: 18px; padding: 20px; background: var(--card); border-radius: 10px; white-space: pre-wrap; font-size: 14px; line-height: 1.7; border: 1px solid var(--border); box-shadow: var(--shadow-lg); position: relative; }
+        .watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-25deg); font-size: 44px; color: rgba(128,128,128,0.05); font-weight: 700; pointer-events: none; white-space: nowrap; user-select: none; z-index: 0; }
+        [data-theme="dark"] .watermark { color: rgba(255,255,255,0.03); }
+        .result-text { position: relative; z-index: 1; }
+        #status { margin-top: 10px; font-size: 13px; color: var(--text-light); min-height: 20px; }
+        .error { color: #e74c3c; font-weight: 500; }
+        /* Модальное окно калькулятора */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-overlay.open { display: flex; }
+        .modal { background: var(--card); border-radius: 12px; padding: 24px; max-width: 400px; width: 90%; box-shadow: var(--shadow-lg); }
+        .modal-title { font-weight: 700; font-size: 16px; margin-bottom: 16px; color: var(--primary); }
+        .modal-close { float: right; background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-light); width: auto; padding: 0; margin: 0; }
+        .calc-row { display: flex; gap: 8px; align-items: end; flex-wrap: wrap; }
+        .calc-row > div { flex: 1; min-width: 90px; }
+        .calc-row label { font-size: 10px; margin-top: 0; text-transform: none; letter-spacing: 0; }
+        .calc-row input { margin-top: 2px; }
+        .calc-result { font-weight: 700; color: var(--green); font-size: 15px; margin-top: 8px; }
+        .calc-apply { background: var(--accent); color: white; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; width: auto; margin-top: 8px; }
+        .calc-apply:hover { background: #d47f2e; }
+        .history { margin-top: 8px; }
+        .history-item { background: var(--card); padding: 12px 14px; margin-bottom: 6px; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: var(--transition); box-shadow: var(--shadow); }
+        .history-item:hover { background: var(--history-hover); border-color: var(--primary-light); }
+        .history-item .doc-info { flex: 1; min-width: 0; }
+        .history-item .doc-date { font-size: 10px; color: var(--text-light); }
+        .history-item .doc-type { font-weight: 700; font-size: 13px; }
+        .history-item .doc-preview { font-size: 11px; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+        .history-item .doc-delete { background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; width: auto; flex-shrink: 0; margin-left: 10px; margin-top: 0; }
+        .history-item .doc-delete:hover { background: #c0392b; }
+        .category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+        .cat-btn { padding: 12px 8px; text-align: center; cursor: pointer; font-weight: 600; font-size: 13px; background: var(--cat-bg); color: var(--text); border: 2px solid transparent; border-radius: 8px; transition: var(--transition); }
+        .cat-btn:hover { background: var(--cat-hover); }
+        .cat-btn.active { border-color: var(--primary); background: var(--cat-active-bg); color: var(--primary); }
+        .dictionary { margin-top: 16px; }
+        .dict-toggle { background: transparent; color: var(--primary); font-size: 13px; cursor: pointer; text-decoration: underline; border: none; width: auto; padding: 0; margin-top: 0; font-weight: 500; }
+        .dict-toggle:hover { color: var(--primary-light); }
+        .dict-content { display: none; margin-top: 10px; }
+        .dict-content.open { display: block; }
+        .dict-term { font-weight: 700; color: var(--primary); }
+        .dict-def { color: var(--text-light); margin-bottom: 4px; padding-left: 8px; border-left: 2px solid var(--border); font-size: 13px; }
+        .footer { text-align: center; padding: 16px; font-size: 11px; color: var(--text-light); margin-top: auto; }
+        .footer strong { color: var(--primary); }
+        @media (max-width: 600px) {
+            .container { margin: 14px auto; padding: 0 8px; }
+            .header { padding: 16px 12px 14px; }
+            .header-logo { font-size: 22px; }
+            .header-sub { font-size: 11px; }
+            .tabs { gap: 2px; padding: 3px; }
+            .tab { padding: 10px 5px; font-size: 12px; border-radius: 6px; }
+            .card { padding: 14px 10px; }
+            label { font-size: 11px; margin-top: 10px; }
+            input, textarea, select { padding: 9px 11px; font-size: 13px; }
+            button { padding: 11px; font-size: 14px; }
+            .result { padding: 14px; font-size: 12px; }
+            .category-grid { grid-template-columns: 1fr; gap: 5px; }
+            .cat-btn { padding: 9px; font-size: 12px; }
+            .steps { gap: 4px; }
+            .step { font-size: 10px; padding: 7px 4px; }
+            .step-num { font-size: 15px; }
+            .watermark { font-size: 24px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-logo">⚖️ Юрист <span>в кармане</span></div>
+        <div class="header-sub">Создайте юридический документ за 1 минуту</div>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Тёмная тема">🌙</button>
+    </div>
+
+    <div class="container">
+
+        <div class="tabs">
+            <button class="tab" onclick="switchTab('outgoing')">✍️ Я хочу составить документ</button>
+            <button class="tab" onclick="switchTab('incoming')">📥 Мне прислали документ</button>
+        </div>
+
+        <div id="tab-outgoing" class="tab-content active">
+            <div class="card">
+                <div class="section-title">📝 Как это работает</div>
+                <div class="steps">
+                    <div class="step"><span class="step-num">1</span>Выберите тему</div>
+                    <div class="step"><span class="step-num">2</span>Тип документа</div>
+                    <div class="step"><span class="step-num">3</span>Заполните поля</div>
+                    <div class="step"><span class="step-num">4</span>Скачайте PDF</div>
+                </div>
+
+                <div class="section-title">Выберите сферу</div>
+                <div class="category-grid" id="categoryGrid">
+                    <button class="cat-btn active" onclick="selectCategory('consumer', this)">🛒 Продавец / Покупатель (гарантия на товар)</button>
+                    <button class="cat-btn" onclick="selectCategory('insurance', this)">🚗 Страховая</button>
+                    <button class="cat-btn" onclick="selectCategory('labor', this)">💼 Труд и работа</button>
+                    <button class="cat-btn" onclick="selectCategory('court', this)">⚖️ Суд</button>
+                    <button class="cat-btn" onclick="selectCategory('gkh', this)">🏠 ЖКХ</button>
+                </div>
+
+                <label>Тип документа</label>
+                <select id="out_docType"></select>
+
+                <label>Ваше ФИО (или организация) <span class="required-star">*</span></label>
+                <input id="out_myName" placeholder="Батурин Александр О." data-required="true">
+
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <div style="flex:1;min-width:140px;">
+                        <label>Ваш телефон</label>
+                        <input id="out_phone" placeholder="+7 (XXX) XXX-XX-XX">
+                    </div>
+                    <div style="flex:1;min-width:140px;">
+                        <label>Номер договора / чека / полиса</label>
+                        <input id="out_docNumber" placeholder="При наличии">
+                    </div>
+                </div>
+
+                <label>Ваш адрес <span style="text-transform:none;font-weight:400;font-size:11px;color:var(--text-light);">(для определения подсудности)</span></label>
+                <input id="out_myAddress" placeholder="г. Москва, ул. Примерная, д. 1, кв. 1" onchange="detectCourt()">
+                <div class="hint" id="courtHint"></div>
+
+                <hr>
+
+                <div class="section-title">📋 Опишите ситуацию</div>
+
+                <div class="field-label">Что произошло? (одной фразой) <span class="required-star">*</span></div>
+                <input id="out_what" placeholder="Купил товар, отказали в возврате / попал в ДТП / задержали зарплату" data-required="true">
+
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <div style="flex:1;min-width:140px;">
+                        <div class="field-label">Где это случилось?</div>
+                        <input id="out_where" placeholder="Магазин «Техника+», ТЦ «Мега»">
+                    </div>
+                    <div style="flex:1;min-width:140px;">
+                        <div class="field-label">Когда это случилось?</div>
+                        <input id="out_when" placeholder="1 мая 2026 года">
+                    </div>
+                </div>
+
+                <div class="field-label">Кто ещё участвовал в ситуации? <span class="example-link" onclick="fillExample('who')">Пример</span></div>
+                <input id="out_who" placeholder="Продавец Петрова, управляющий Батурин А.О.">
+
+                <div class="field-label">Что вам ответили? (дословно) <span class="example-link" onclick="fillExample('answer')">Пример</span></div>
+                <input id="out_answer" placeholder="«Ничем не можем помочь, ждите экспертизу 45 дней»">
+
+                <label>Кому вы направляете документ? <span class="required-star">*</span></label>
+                <input id="out_opponent" placeholder="ООО «Мир обуви»" data-required="true">
+                <div class="hint" id="opponentHint"></div>
+
+                <div class="field-label">Дополнительная информация <span class="example-link" onclick="fillExample('extra')">Пример</span></div>
+                <textarea id="out_extra" placeholder="Любые детали: свидетели, фото, видео, переписка."></textarea>
+
+                <label>Сумма требований</label>
+                <input id="out_price" placeholder="Например: 5000">
+
+                <button class="btn-calc" onclick="openCalculator()">🧮 Калькулятор неустойки</button>
+
+                <label>Чего хотите добиться?</label>
+                <input id="out_goal" placeholder="Вернуть деньги, отменить приказ, взыскать неустойку">
+
+                <label>Доказательства</label>
+                <select id="out_evidence">
+                    <option value="receipt">Есть чек</option>
+                    <option value="bank">Выписка из банка</option>
+                    <option value="witness">Свидетели</option>
+                    <option value="photo">Фото / видео</option>
+                    <option value="multiple">Чек + фото + свидетели</option>
+                    <option value="none">Нет доказательств</option>
+                </select>
+            </div>
+
+            <div class="card dictionary">
+                <button class="dict-toggle" onclick="toggleDict()">📖 Словарь юридических терминов</button>
+                <div class="dict-content" id="dictContent">
+                    <p><span class="dict-term">Истец</span> — тот, кто подаёт в суд.</p>
+                    <p class="dict-def">Например: вы подали иск на магазин — вы истец.</p>
+                    <p><span class="dict-term">Ответчик</span> — тот, на кого подали в суд.</p>
+                    <p class="dict-def">Например: магазин, который не возвращает деньги.</p>
+                    <p><span class="dict-term">Претензия</span> — письменное требование к компании перед судом.</p>
+                    <p class="dict-def">Обязательный шаг перед подачей иска.</p>
+                    <p><span class="dict-term">Иск</span> — заявление в суд.</p>
+                    <p class="dict-def">Подаётся, если претензию проигнорировали.</p>
+                    <p><span class="dict-term">Ходатайство</span> — просьба к суду.</p>
+                    <p class="dict-def">Например: перенести заседание.</p>
+                    <p><span class="dict-term">Неустойка</span> — штраф за каждый день просрочки (1% от цены товара в день по ст. 23 ЗоЗПП).</p>
+                    <p class="dict-def">Начисляется, если продавец нарушил сроки возврата или ремонта.</p>
+                    <p><span class="dict-term">Роспотребнадзор</span> — защищает потребителей.</p>
+                    <p class="dict-def">Может оштрафовать магазин.</p>
+                    <p><span class="dict-term">ГЖИ</span> — Госжилинспекция.</p>
+                    <p class="dict-def">Следит за УК и коммунальщиками.</p>
+                    <p><span class="dict-term">Судебный приказ</span> — решение суда без заседания.</p>
+                    <p class="dict-def">Можно отменить в 10-дневный срок.</p>
+                    <p><span class="dict-term">Подсудность</span> — в какой суд подавать иск.</p>
+                    <p class="dict-def">Обычно по месту жительства ответчика или истца.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-incoming" class="tab-content">
+            <div class="card">
+                <div class="section-title">📎 Загрузите входящий документ</div>
+                <p style="font-size:13px;color:var(--text-light);margin-bottom:10px;">Поля заполнятся автоматически после распознавания</p>
+                <label>Файл (jpg, png, pdf)</label>
+                <input type="file" id="uploadedFile" accept=".jpg,.jpeg,.png,.pdf">
+                <button class="btn-ocr" onclick="readFile()" id="btnOcr">🔍 Распознать текст из файла</button>
+                <div class="file-info" id="fileInfo"></div>
+                <label>Распознанный текст (можно отредактировать)</label>
+                <textarea id="recognizedText" placeholder="Текст из файла появится здесь..." style="height:130px;"></textarea>
+                <hr>
+                <label>Отправитель <span id="autoBadge1"></span></label>
+                <input id="inc_sender" placeholder="Батурин Александр О.">
+                <label>Получатель (вы) <span id="autoBadge2"></span></label>
+                <input id="inc_receiver" placeholder="ООО «Ваша компания»">
+                <label>Ваш адрес</label>
+                <input id="inc_address" placeholder="г. Москва, ул. Примерная, д. 1">
+                <label>Дата входящего <span id="autoBadge3"></span></label>
+                <input id="inc_date" type="date" value="2026-05-18">
+                <label>Суть требований <span id="autoBadge4"></span></label>
+                <textarea id="inc_demands" placeholder="Что от вас требуют и на каком основании"></textarea>
+                <label>Сумма требований <span id="autoBadge5"></span></label>
+                <input id="inc_sum" placeholder="Например: 50000">
+                <label>Ваша позиция</label>
+                <textarea id="inc_position" placeholder="Согласны, не согласны или частично — и почему"></textarea>
+            </div>
+        </div>
+
+        <div class="btn-row">
+            <button class="btn-ai" onclick="askAI()" id="btnAi" style="flex:3;">⚡ Сформировать документ</button>
+            <button class="btn-draft" onclick="saveDraft()" style="flex:1;">💾 Черновик</button>
+            <button class="btn-clear" onclick="clearForm()" style="flex:1;">🗑 Очистить</button>
+        </div>
+        <div id="limitBar" class="limit-bar"></div>
+        <div class="btn-row">
+            <button class="btn-pdf" onclick="downloadPDF()" id="btnPdf" disabled>📄 PDF</button>
+            <button class="btn-print" onclick="printDocument()" id="btnPrint" disabled>🖨 Печать</button>
+            <button class="btn-copy" onclick="copyDocument()" id="btnCopy" disabled>📋 Копировать</button>
+            <button class="btn-email" onclick="sendEmail()" id="btnEmail" disabled>📧 Email</button>
+        </div>
+        <div id="status"></div>
+        <div id="result" class="result" style="display:none;">
+            <div class="watermark">Создано Александром Б.</div>
+            <div class="result-text" id="resultText"></div>
+        </div>
+
+        <div class="card" style="margin-top:18px;">
+            <div class="section-title">📋 Ваши документы</div>
+            <div id="history" class="history"></div>
+        </div>
+    </div>
+
+    <!-- Модальное окно калькулятора -->
+    <div class="modal-overlay" id="calcModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeCalculator()">✕</button>
+            <div class="modal-title">🧮 Калькулятор неустойки (1% в день по ЗоЗПП)</div>
+            <div class="calc-row">
+                <div><label>Сумма долга (руб.)</label><input id="calc_debt" type="number" placeholder="5000" oninput="calcPenalty()"></div>
+                <div><label>Дней просрочки</label><input id="calc_days" type="number" placeholder="30" oninput="calcPenalty()"></div>
+            </div>
+            <div class="calc-result" id="calcResult"></div>
+            <button class="calc-apply" onclick="applyPenalty()">Применить эту сумму</button>
+        </div>
+    </div>
+
+    <div class="copied-toast" id="copiedToast">✅ Текст скопирован!</div>
+
+    <div class="footer">
+        <strong>Юрист в кармане</strong> © 2026 &nbsp;·&nbsp; Сервис не заменяет консультацию профессионального юриста
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.4/tesseract.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+    <script>
+        const API_KEY = 'sk-f6e401b63a4547a1ae1ca864ef35bbdc';
+        const BUY_EMAIL = 'alexandrnk2014@yandex.ru';
+        let lastDocument = '';
+        let activeTab = 'outgoing';
+        let currentCategory = 'consumer';
+        let detectedCourt = '';
+        let calculatedPenalty = 0;
+        const FREE_LIMIT = 50;
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        function getUsageCount() { return parseInt(localStorage.getItem('usageCount') || '0'); }
+        function incrementUsage() { let c = getUsageCount() + 1; localStorage.setItem('usageCount', c); return c; }
+        function isLimitReached() { return getUsageCount() >= FREE_LIMIT; }
+
+        function updateLimitUI() {
+            let used = getUsageCount();
+            let bar = document.getElementById('limitBar');
+            let btn = document.getElementById('btnAi');
+            if (isLimitReached()) {
+                bar.innerHTML = '🔒 Лимит бесплатных документов исчерпан (50 из 50). <br><span style="color:#c0392b;">Приобретите полную версию.</span>';
+                btn.style.display = 'none';
+                if (!document.getElementById('btnBuy')) {
+                    let buyBtn = document.createElement('button');
+                    buyBtn.id = 'btnBuy';
+                    buyBtn.className = 'btn-limit';
+                    buyBtn.textContent = '💬 Напишите нам для покупки';
+                    buyBtn.onclick = function() { window.location.href = 'mailto:' + BUY_EMAIL + '?subject=Покупка полной версии'; };
+                    btn.parentNode.insertBefore(buyBtn, btn.nextSibling);
+                }
+            } else {
+                bar.innerHTML = '📊 Бесплатных документов: <span>' + used + '</span> из <span>' + FREE_LIMIT + '</span>';
+                btn.style.display = '';
+                let buyBtn = document.getElementById('btnBuy');
+                if (buyBtn) buyBtn.remove();
+            }
+        }
+
+        function useOneRequest() {
+            if (isLimitReached()) { document.getElementById('status').innerHTML = '<span class="error">Лимит исчерпан. Напишите на ' + BUY_EMAIL + '</span>'; return false; }
+            incrementUsage(); updateLimitUI(); return true;
+        }
+
+        function toggleTheme() {
+            let html = document.documentElement; let btn = document.querySelector('.theme-toggle');
+            if (html.getAttribute('data-theme') === 'dark') {
+                html.setAttribute('data-theme', 'light'); btn.textContent = '🌙'; localStorage.setItem('theme', 'light');
+            } else {
+                html.setAttribute('data-theme', 'dark'); btn.textContent = '☀️'; localStorage.setItem('theme', 'dark');
+            }
+        }
+        (function() {
+            if (localStorage.getItem('theme') === 'dark') { document.documentElement.setAttribute('data-theme', 'dark'); document.querySelector('.theme-toggle').textContent = '☀️'; }
+            updateLimitUI();
+        })();
+
+        const categoryDocs = {
+            consumer: [{ value: 'claim', text: 'Претензия (возврат товара / услуги)' },{ value: 'lawsuit', text: 'Исковое заявление в суд' },{ value: 'response', text: 'Ответ на претензию' },{ value: 'rpn', text: 'Жалоба в Роспотребнадзор' }],
+            insurance: [{ value: 'claim_ins', text: 'Заявление о страховой выплате' },{ value: 'claim_ins_reject', text: 'Претензия при отказе в выплате' },{ value: 'lawsuit_ins', text: 'Иск к страховой компании' },{ value: 'rpn_ins', text: 'Жалоба в Роспотребнадзор на страховую' }],
+            labor: [{ value: 'claim_labor', text: 'Претензия работодателю' },{ value: 'lawsuit_labor', text: 'Иск о взыскании зарплаты' },{ value: 'complaint_labor', text: 'Жалоба в Трудовую инспекцию' },{ value: 'lawsuit_fire', text: 'Иск о незаконном увольнении' }],
+            court: [{ value: 'motion', text: 'Ходатайство в суд' },{ value: 'objection', text: 'Возражение на судебный приказ' },{ value: 'lawsuit', text: 'Исковое заявление' },{ value: 'penalty', text: 'Заявление о взыскании неустойки' }],
+            gkh: [{ value: 'claim_gkh', text: 'Претензия в УК / ТСЖ' },{ value: 'lawsuit_gkh', text: 'Иск к УК / ТСЖ' },{ value: 'gji', text: 'Жалоба в ГЖИ' },{ value: 'rpn_gkh', text: 'Жалоба в Роспотребнадзор' }]
+        };
+
+        const categoryHints = {
+            consumer: { what: 'Купил товар, отказали в возврате / товар сломался', who: 'Продавец Петрова, управляющий Батурин А.О.', answer: '«Ничем не можем помочь, ждите экспертизу»', extra: 'Чек сохранился, есть фото дефекта.', opponent: 'ООО «Название магазина»' },
+            insurance: { what: 'Попал в ДТП / страховая отказала в выплате', who: 'Виновник ДТП, сотрудник страховой Петрова', answer: '«У вас недостаточно документов»', extra: 'Номер полиса, дата ДТП, фото с места.', opponent: 'АО «Название страховой»' },
+            labor: { what: 'Задержали зарплату / незаконно уволили', who: 'Начальник Батурин А.О., директор Петров', answer: '«Денег нет, ждите»', extra: 'Дата увольнения, должность, размер зарплаты.', opponent: 'ООО «Работодатель»' },
+            court: { what: 'Подать ходатайство / отменить судебный приказ', who: 'Судья, ответчик, истец', answer: '', extra: 'Номер дела, дата заседания.', opponent: 'Мировой суд участка №...' },
+            gkh: { what: 'Затопило квартиру / нет отопления', who: 'Сотрудник УК Батурин А.О., председатель ТСЖ', answer: '«У нас нет денег на ремонт»', extra: 'Адрес, дата аварии, фото, акт о заливе.', opponent: 'ООО «Название УК»' }
+        };
+
+        const courtDB = {
+            'москва': 'в районный суд г. Москвы','санкт-петербург': 'в районный суд г. Санкт-Петербурга','екатеринбург': 'в районный суд г. Екатеринбурга','новосибирск': 'в районный суд г. Новосибирска','казань': 'в районный суд г. Казани','краснодар': 'в районный суд г. Краснодара','ростов': 'в районный суд г. Ростова-на-Дону','самара': 'в районный суд г. Самары','воронеж': 'в районный суд г. Воронежа','нижний новгород': 'в районный суд г. Нижнего Новгорода'
+        };
+
+        function fillExample(type) {
+            let h = categoryHints[currentCategory] || categoryHints['consumer'];
+            let el, val;
+            if (type === 'who') { el = document.getElementById('out_who'); val = h.who; }
+            if (type === 'answer') { el = document.getElementById('out_answer'); val = h.answer; }
+            if (type === 'extra') { el = document.getElementById('out_extra'); val = h.extra; }
+            if (el && val) {
+                el.value = val; el.classList.add('example-text');
+                el.addEventListener('input', function handler() { el.classList.remove('example-text'); el.removeEventListener('input', handler); }, { once: true });
+                el.addEventListener('focus', function handler() { el.classList.remove('example-text'); el.removeEventListener('focus', handler); }, { once: true });
+            }
+        }
+
+        function updateHints() {
+            let h = categoryHints[currentCategory] || categoryHints['consumer'];
+            document.getElementById('out_what').placeholder = h.what;
+            document.getElementById('out_where').placeholder = h.where || 'Укажите место';
+            document.getElementById('out_when').placeholder = h.when || 'Укажите дату';
+            document.getElementById('out_who').placeholder = h.who;
+            document.getElementById('out_answer').placeholder = h.answer || 'Что вам ответили?';
+            document.getElementById('out_extra').placeholder = h.extra;
+            document.getElementById('opponentHint').textContent = 'Например: ' + (h.opponent || '');
+        }
+
+        function autoSaveDraft() {
+            let draft = { category: currentCategory, docType: document.getElementById('out_docType').value, myName: document.getElementById('out_myName').value, phone: document.getElementById('out_phone').value, docNumber: document.getElementById('out_docNumber').value, myAddress: document.getElementById('out_myAddress').value, opponent: document.getElementById('out_opponent').value, what: document.getElementById('out_what').value, where: document.getElementById('out_where').value, when: document.getElementById('out_when').value, who: document.getElementById('out_who').value, answer: document.getElementById('out_answer').value, extra: document.getElementById('out_extra').value, price: document.getElementById('out_price').value, goal: document.getElementById('out_goal').value, evidence: document.getElementById('out_evidence').value };
+            localStorage.setItem('legalDraft', JSON.stringify(draft));
+        }
+
+        function loadDraft() {
+            let saved = localStorage.getItem('legalDraft'); if (!saved) return false;
+            let draft = JSON.parse(saved); if (!draft.myName && !draft.what && !draft.opponent) return false;
+            currentCategory = draft.category || 'consumer';
+            document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+            let catBtn = document.querySelector(`.cat-btn[onclick*="'${currentCategory}'"]`); if (catBtn) catBtn.classList.add('active');
+            let select = document.getElementById('out_docType'); select.innerHTML = categoryDocs[currentCategory].map(d => `<option value="${d.value}">${d.text}</option>`).join('');
+            if (draft.docType) select.value = draft.docType;
+            document.getElementById('out_myName').value = draft.myName || '';
+            document.getElementById('out_phone').value = draft.phone || '';
+            document.getElementById('out_docNumber').value = draft.docNumber || '';
+            document.getElementById('out_myAddress').value = draft.myAddress || '';
+            document.getElementById('out_opponent').value = draft.opponent || '';
+            document.getElementById('out_what').value = draft.what || '';
+            document.getElementById('out_where').value = draft.where || '';
+            document.getElementById('out_when').value = draft.when || '';
+            document.getElementById('out_who').value = draft.who || '';
+            document.getElementById('out_answer').value = draft.answer || '';
+            document.getElementById('out_extra').value = draft.extra || '';
+            document.getElementById('out_price').value = draft.price || '';
+            document.getElementById('out_goal').value = draft.goal || '';
+            if (draft.evidence) document.getElementById('out_evidence').value = draft.evidence;
+            updateHints(); detectCourt();
+            document.getElementById('status').innerHTML = '<span class="draft-badge">📂 Черновик восстановлен</span>';
+            return true;
+        }
+
+        function saveDraft() { autoSaveDraft(); document.getElementById('status').innerHTML = '<span class="draft-badge">💾 Черновик сохранён</span>'; }
+        document.addEventListener('input', function(e) { if (e.target.closest('#tab-outgoing')) autoSaveDraft(); });
+
+        function selectCategory(cat, btn) {
+            currentCategory = cat;
+            document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active');
+            document.getElementById('out_docType').innerHTML = categoryDocs[cat].map(d => `<option value="${d.value}">${d.text}</option>`).join('');
+            updateHints(); detectCourt();
+        }
+
+        function detectCourt() {
+            let addr = document.getElementById('out_myAddress').value.toLowerCase(); let hint = document.getElementById('courtHint'); detectedCourt = '';
+            if (!addr) { hint.textContent = ''; return; }
+            for (let [city, court] of Object.entries(courtDB)) { if (addr.includes(city)) { detectedCourt = court; hint.textContent = '📍 Суд: ' + court; return; } }
+            detectedCourt = 'в районный суд по вашему адресу'; hint.textContent = '📍 Обратитесь в районный суд по вашему адресу.';
+        }
+
+        function toggleDict() { document.getElementById('dictContent').classList.toggle('open'); }
+
+        // Калькулятор в модальном окне
+        function openCalculator() { document.getElementById('calcModal').classList.add('open'); document.getElementById('calc_debt').focus(); }
+        function closeCalculator() { document.getElementById('calcModal').classList.remove('open'); }
+        function calcPenalty() {
+            let debt = parseFloat(document.getElementById('calc_debt').value) || 0; let days = parseInt(document.getElementById('calc_days').value) || 0;
+            if (debt > 0 && days > 0) { calculatedPenalty = Math.round(debt * 0.01 * days); document.getElementById('calcResult').textContent = 'Неустойка: ' + calculatedPenalty.toLocaleString() + ' ₽'; }
+            else { calculatedPenalty = 0; document.getElementById('calcResult').textContent = ''; }
+        }
+        function applyPenalty() { if (calculatedPenalty > 0) { document.getElementById('out_price').value = calculatedPenalty; document.getElementById('calcResult').textContent = '✅ Сумма ' + calculatedPenalty.toLocaleString() + ' ₽ подставлена.'; closeCalculator(); } }
+
+        function switchTab(tab) {
+            activeTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            if (tab === 'incoming') { document.querySelectorAll('.tab')[1].classList.add('active'); document.getElementById('tab-incoming').classList.add('active'); }
+            else { document.querySelectorAll('.tab')[0].classList.add('active'); document.getElementById('tab-outgoing').classList.add('active'); }
+            document.getElementById('status').textContent = ''; document.getElementById('result').style.display = 'none';
+        }
+
+        function clearForm() {
+            document.querySelectorAll('#tab-outgoing input[type="text"], #tab-outgoing textarea').forEach(el => { el.value = ''; el.classList.remove('error-field','example-text'); });
+            document.getElementById('out_evidence').value = 'receipt'; document.getElementById('courtHint').textContent = '';
+            document.getElementById('status').textContent = ''; document.getElementById('result').style.display = 'none';
+            ['btnPdf','btnPrint','btnCopy','btnEmail'].forEach(id => document.getElementById(id).disabled = true);
+            lastDocument = ''; detectedCourt = ''; calculatedPenalty = 0;
+            document.getElementById('calc_debt').value = ''; document.getElementById('calc_days').value = ''; document.getElementById('calcResult').textContent = '';
+            localStorage.removeItem('legalDraft'); updateHints();
+        }
+
+        function validateForm() {
+            let valid = true;
+            document.querySelectorAll('#tab-outgoing [data-required]').forEach(el => { if (!el.value.trim()) { el.classList.add('error-field'); valid = false; } else { el.classList.remove('error-field'); } });
+            if (!valid) document.getElementById('status').innerHTML = '<span class="error">Заполните обязательные поля.</span>';
+            return valid;
+        }
+
+        selectCategory('consumer', document.querySelector('.cat-btn.active')); switchTab('outgoing');
+        if (!loadDraft()) updateHints();
+
+        function saveToHistory(docText, docType) {
+            let history = JSON.parse(localStorage.getItem('docHistory') || '[]');
+            history.unshift({ date: new Date().toLocaleString('ru-RU'), type: docType, text: docText, preview: docText.substring(0, 120).replace(/\n/g, ' ') });
+            if (history.length > 20) history = history.slice(0, 20); localStorage.setItem('docHistory', JSON.stringify(history)); showHistory();
+        }
+
+        function showHistory() {
+            let div = document.getElementById('history'); let history = JSON.parse(localStorage.getItem('docHistory') || '[]');
+            if (history.length === 0) { div.innerHTML = '<p style="color:var(--text-light);font-size:13px;text-align:center;padding:10px;">Пока нет сохранённых документов</p>'; return; }
+            div.innerHTML = history.map((doc, i) => `<div class="history-item"><div class="doc-info" onclick="openHistoryItem(${i})"><div class="doc-type">📄 ${doc.type}</div><div class="doc-date">${doc.date}</div><div class="doc-preview">${doc.preview}...</div></div><button class="doc-delete" onclick="deleteHistoryItem(${i}); event.stopPropagation();">Удалить</button></div>`).join('');
+        }
+
+        function openHistoryItem(index) { let history = JSON.parse(localStorage.getItem('docHistory') || '[]'); if (history[index]) { lastDocument = history[index].text; showResult(lastDocument); document.getElementById('status').textContent = '📂 Открыт документ от ' + history[index].date; } }
+        function deleteHistoryItem(index) { if (confirm('Удалить?')) { let history = JSON.parse(localStorage.getItem('docHistory') || '[]'); history.splice(index, 1); localStorage.setItem('docHistory', JSON.stringify(history)); showHistory(); } }
+        showHistory();
+
+        function showResult(text) { document.getElementById('resultText').textContent = text; document.getElementById('result').style.display = 'block'; ['btnPdf','btnPrint','btnCopy','btnEmail'].forEach(id => document.getElementById(id).disabled = false); }
+
+        function preprocessImage(file) {
+            return new Promise((resolve) => {
+                let img = new Image(); let url = URL.createObjectURL(file);
+                img.onload = function() {
+                    let canvas = document.createElement('canvas'); let ctx = canvas.getContext('2d');
+                    let scale = Math.min(2400 / img.width, 2.5); canvas.width = img.width * scale; canvas.height = img.height * scale;
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height); let data = imageData.data;
+                    for (let i = 0; i < data.length; i += 4) {
+                        let gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
+                        let bw; if (gray < 90) bw = 0; else if (gray > 170) bw = 255; else if (gray < 130) bw = Math.max(0, gray - 40); else bw = Math.min(255, gray + 30);
+                        data[i] = bw; data[i+1] = bw; data[i+2] = bw;
+                    }
+                    ctx.putImageData(imageData, 0, 0); canvas.toBlob(function(blob) { resolve(URL.createObjectURL(blob)); }, 'image/png'); URL.revokeObjectURL(url);
+                }; img.src = url;
+            });
+        }
+
+        function clearAutoBadges() { for (let i = 1; i <= 5; i++) { let b = document.getElementById('autoBadge' + i); if (b) b.innerHTML = ''; } }
+
+        function autoFillForm(text) {
+            clearAutoBadges(); let filled = [];
+            let senderPatterns = [/от\s*[«"]([^«»"]+)[»"]/i, /(?:Заявитель|Истец)[:\s]+([^\n]+)/i, /(?:ФИО)[:\s]+([^\n]+)/i, /^([А-ЯЁ][а-яё]+\s[А-ЯЁ][а-яё]+\s[А-ЯЁ][а-яё]+)/m];
+            for (let p of senderPatterns) { let m = text.match(p); if (m && m[1] && m[1].trim().length > 5) { document.getElementById('inc_sender').value = m[1].trim(); document.getElementById('autoBadge1').innerHTML = '<span class="autofill-badge">авто</span>'; filled.push('отправитель'); break; } }
+            let receiverPatterns = [/(?:Кому|В адрес)[:\s]+([^\n]+)/i, /(?:ООО|ИП)\s*[«"]([^«»"]+)[»"]/];
+            for (let p of receiverPatterns) { let m = text.match(p); if (m && m[1] && m[1].trim().length > 5) { document.getElementById('inc_receiver').value = m[1].trim(); document.getElementById('autoBadge2').innerHTML = '<span class="autofill-badge">авто</span>'; filled.push('получатель'); break; } }
+            let datePatterns = [/(\d{1,2}[./]\d{1,2}[./]\d{2,4})/];
+            for (let p of datePatterns) { let m = text.match(p); if (m && m[1]) { let ds = m[1].replace(/\./g, '-'); let parts = ds.split('-'); if (parts[0] && parts[1] && parts[2]) { if (parts[2].length === 2) parts[2] = '20' + parts[2]; document.getElementById('inc_date').value = parts[2] + '-' + parts[1].padStart(2,'0') + '-' + parts[0].padStart(2,'0'); document.getElementById('autoBadge3').innerHTML = '<span class="autofill-badge">авто</span>'; filled.push('дата'); break; } } }
+            let sumPatterns = [/(\d[\d\s]*)\s*(?:руб|₽)/i];
+            for (let p of sumPatterns) { let m = text.match(p); if (m && m[1]) { let sum = m[1].replace(/\s/g, ''); if (parseInt(sum) > 10) { document.getElementById('inc_sum').value = sum; document.getElementById('autoBadge5').innerHTML = '<span class="autofill-badge">авто</span>'; filled.push('сумма'); break; } } }
+            if (filled.length >= 2) { document.getElementById('inc_demands').value = 'Из текста: ' + text.substring(0, 300).replace(/\n/g, ' ').trim() + '...'; document.getElementById('autoBadge4').innerHTML = '<span class="autofill-badge">авто</span>'; document.getElementById('inc_position').value = 'Прошу составить мотивированный ответ.'; }
+            if (filled.length > 0) { document.getElementById('fileInfo').textContent += ' | Автозаполнено: ' + filled.join(', ') + '.'; }
+        }
+
+        async function readFile() {
+            let fileInput = document.getElementById('uploadedFile'); let fileInfo = document.getElementById('fileInfo'); let recognizedText = document.getElementById('recognizedText'); let btnOcr = document.getElementById('btnOcr');
+            if (!fileInput.files[0]) { fileInfo.innerHTML = '<span class="error">Сначала выберите файл.</span>'; return; }
+            let file = fileInput.files[0]; fileInfo.textContent = 'Читаю: ' + file.name + '...'; btnOcr.disabled = true;
+            try {
+                let text = '';
+                if (file.type === 'application/pdf') {
+                    let arrayBuffer = await file.arrayBuffer(); let pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise; let pages = [];
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        fileInfo.textContent = 'Страница ' + i + ' из ' + pdf.numPages + '...';
+                        let page = await pdf.getPage(i); let viewport = page.getViewport({ scale: 3.0 });
+                        let canvas = document.createElement('canvas'); let ctx = canvas.getContext('2d'); canvas.width = viewport.width; canvas.height = viewport.height;
+                        await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                        let blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                        let processedUrl = await preprocessImage(blob);
+                        let result = await Tesseract.recognize(processedUrl, 'rus+eng', { logger: m => { if (m.status === 'recognizing text') fileInfo.textContent = 'Страница ' + i + ': ' + Math.round(m.progress * 100) + '%'; } });
+                        pages.push(result.data.text); URL.revokeObjectURL(processedUrl);
+                    }
+                    text = pages.join('\n\n');
+                } else {
+                    let processedUrl = await preprocessImage(file);
+                    let result = await Tesseract.recognize(processedUrl, 'rus+eng', { logger: m => { if (m.status === 'recognizing text') fileInfo.textContent = 'Распознаю: ' + Math.round(m.progress * 100) + '%'; } });
+                    text = result.data.text; URL.revokeObjectURL(processedUrl);
+                }
+                recognizedText.value = text.trim(); fileInfo.textContent = '✅ Распознано ' + text.length + ' символов.'; autoFillForm(text);
+            } catch (err) { fileInfo.innerHTML = '<span class="error">Ошибка: ' + err.message + '</span>'; }
+            btnOcr.disabled = false;
+        }
+
+        async function askAI() {
+            if (activeTab === 'outgoing') { if (!validateForm()) return; if (!useOneRequest()) return; }
+            let btnAi = document.getElementById('btnAi'); let status = document.getElementById('status'); let result = document.getElementById('result');
+            ['btnPdf','btnPrint','btnCopy','btnEmail'].forEach(id => document.getElementById(id).disabled = true);
+            btnAi.disabled = true; btnAi.textContent = '⏳ Составляем...'; status.textContent = ''; result.style.display = 'none'; lastDocument = '';
+            let docDisplayName, fullContext;
+
+            if (activeTab === 'incoming') {
+                docDisplayName = 'Ответ на претензию';
+                fullContext = `Составь ответ на претензию:\nОтправитель: ${document.getElementById('inc_sender').value}\nПолучатель: ${document.getElementById('inc_receiver').value}\nАдрес: ${document.getElementById('inc_address').value}\nДата: ${document.getElementById('inc_date').value}\nСуть: ${document.getElementById('inc_demands').value}\nСумма: ${document.getElementById('inc_sum').value}\nТекст: ${document.getElementById('recognizedText').value.trim()}\nПозиция: ${document.getElementById('inc_position').value}`;
+            } else {
+                let select = document.getElementById('out_docType'); docDisplayName = select.options[select.selectedIndex].text;
+                let ev = document.getElementById('out_evidence').value;
+                let evidenceText = { receipt: 'чек', bank: 'выписка', witness: 'свидетели', photo: 'фото', multiple: 'чек+фото', none: 'нет' }[ev];
+                let phone = document.getElementById('out_phone').value.trim();
+                let docNumber = document.getElementById('out_docNumber').value.trim();
+                let situation = ['Что: ' + document.getElementById('out_what').value,'Где: ' + document.getElementById('out_where').value,'Когда: ' + document.getElementById('out_when').value,'Участники: ' + document.getElementById('out_who').value,'Ответ: ' + document.getElementById('out_answer').value,'Дополнительно: ' + document.getElementById('out_extra').value].join('\n');
+                let courtInfo = detectedCourt ? `\nПодсудность: ${detectedCourt}` : '';
+                let phoneInfo = phone ? `\nТелефон: ${phone}` : '';
+                let docInfo = docNumber ? `\nНомер договора/чека/полиса: ${docNumber}` : '';
+                fullContext = `Составь "${docDisplayName}".\nФИО: ${document.getElementById('out_myName').value}${phoneInfo}${docInfo}\nАдрес: ${document.getElementById('out_myAddress').value}\nКому: ${document.getElementById('out_opponent').value}\n\nСитуация:\n${situation}\n\nСумма: ${document.getElementById('out_price').value || 'нет'} руб.\nЦель: ${document.getElementById('out_goal').value}\nДоказательства: ${evidenceText}${courtInfo}`;
+            }
+            fullContext += '\n\nВАЖНО: Если требование связано с возвратом товара, ремонтом или услугой по ЗоЗПП, обязательно укажи в документе: «В случае отказа или нарушения сроков удовлетворения требований продавец (исполнитель) обязан выплатить неустойку в размере 1% от цены товара (услуги) за каждый день просрочки на основании ст. 23 Закона о защите прав потребителей». Не используй символ *. Начинай сразу с текста.';
+
+            try {
+                let response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + API_KEY },
+                    body: JSON.stringify({
+                        model: 'deepseek-chat',
+                        messages: [
+                            { role: 'system', content: 'Ты — юридический конструктор РФ. Если требование по ЗоЗПП — всегда добавляй предупреждение о неустойке 1% по ст. 23. Не используй *. Начинай сразу с заголовка.' },
+                            { role: 'user', content: fullContext }
+                        ],
+                        temperature: 0.3,
+                        max_tokens: 3000
+                    })
+                });
+                if (!response.ok) { let err = await response.json(); throw new Error(err.error?.message || 'Ошибка: ' + response.status); }
+                let json = await response.json();
+                lastDocument = json.choices[0].message.content;
+                showResult(lastDocument); status.textContent = '✅ Документ готов.'; saveToHistory(lastDocument, docDisplayName);
+                window.scrollTo({ top: result.offsetTop - 80, behavior: 'smooth' });
+            } catch (error) { status.innerHTML = '<span class="error">Ошибка: ' + error.message + '</span>'; }
+            btnAi.disabled = false; btnAi.textContent = '⚡ Сформировать документ';
+        }
+
+        function getPrintHTML(doc) {
+            let cleanDoc = doc.replace(/\*/g, '').replace(/#/g, '');
+            let lines = cleanDoc.split('\n'); let title = lines[0] ? lines[0].trim() : 'Документ'; let rest = lines.slice(1).join('\n');
+            if (title.length < 3) { title = cleanDoc.substring(0, 80).trim(); rest = cleanDoc.substring(80); }
+            return `<html><head><meta charset="UTF-8"><style>body{font-family:"Times New Roman",serif;font-size:14pt;line-height:1.5;padding:60px 40px;position:relative;}.doctitle{text-align:center;font-weight:bold;font-size:16pt;margin-bottom:20px;text-transform:uppercase;}.watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-25deg);font-size:60px;color:rgba(0,0,0,0.05);font-weight:700;pointer-events:none;z-index:0;white-space:nowrap;}.content{position:relative;z-index:1;white-space:pre-wrap;}</style></head><body><div class="watermark">Создано Александром Б.</div><div class="doctitle">${title}</div><div class="content">${rest.replace(/\n/g, '<br>')}</div></body></html>`;
+        }
+
+        function downloadPDF() { if (!lastDocument) return; let w = window.open('', '_blank'); w.document.write(getPrintHTML(lastDocument)); w.document.close(); w.focus(); setTimeout(() => w.print(), 500); }
+        function printDocument() { if (!lastDocument) return; let w = window.open('', '_blank'); w.document.write(getPrintHTML(lastDocument)); w.document.close(); w.focus(); w.print(); }
+        function copyDocument() { if (!lastDocument) return; navigator.clipboard.writeText(lastDocument.replace(/\*/g, '')).then(() => { let t = document.getElementById('copiedToast'); t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }); }
+        function sendEmail() { if (!lastDocument) return; window.location.href = 'mailto:?subject=Юридический документ&body=' + encodeURIComponent(lastDocument.replace(/\*/g, '')); }
+    </script>
+</body>
+</html>
