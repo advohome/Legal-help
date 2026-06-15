@@ -12,7 +12,6 @@
             --border: #e0e4e8; --text: #2d3436; --text-light: #636e72;
             --input-bg: #fafbfc; --shadow: 0 2px 8px rgba(0,0,0,0.06);
             --shadow-lg: 0 4px 16px rgba(0,0,0,0.10); --transition: 0.2s ease;
-            --calc-bg: #fef9f3; --calc-border: #f0d9b5;
             --draft-bg: #fff3cd; --draft-text: #856404;
             --step-bg: #f0f4fb; --cat-bg: #f0f3f7; --cat-hover: #e2e8f0;
             --cat-active-bg: #e8f0fb; --history-hover: #f0f4ff;
@@ -26,7 +25,6 @@
             --border: #3a3f4b; --text: #e4e6ea; --text-light: #a0a8b4;
             --input-bg: #2a2d35; --shadow: 0 2px 8px rgba(0,0,0,0.20);
             --shadow-lg: 0 4px 16px rgba(0,0,0,0.30);
-            --calc-bg: #2a2520; --calc-border: #4a3f30;
             --draft-bg: #3a3520; --draft-text: #c0a040;
             --step-bg: #2a3040; --cat-bg: #2a2d35; --cat-hover: #353a45;
             --cat-active-bg: #2a3a50; --history-hover: #2a3040;
@@ -104,7 +102,13 @@
         .result-text { position: relative; z-index: 1; }
         #status { margin-top: 10px; font-size: 13px; color: var(--text-light); min-height: 20px; }
         .error { color: #e74c3c; font-weight: 500; }
-        /* Модальное окно калькулятора */
+        .forecast-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px; margin-top: 20px; }
+        [data-theme="dark"] .forecast-box { background: #1a2a1a; border-color: #2a4a2a; }
+        .forecast-title { font-weight: 700; font-size: 15px; margin-bottom: 8px; color: var(--green); }
+        .forecast-text { font-size: 14px; line-height: 1.6; }
+        .forecast-high { color: #2e7d32; font-weight: 700; }
+        .forecast-medium { color: #e67e22; font-weight: 700; }
+        .forecast-low { color: #c0392b; font-weight: 700; }
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
         .modal-overlay.open { display: flex; }
         .modal { background: var(--card); border-radius: 12px; padding: 24px; max-width: 400px; width: 90%; box-shadow: var(--shadow-lg); }
@@ -203,7 +207,7 @@
                 <div style="display:flex;gap:8px;flex-wrap:wrap;">
                     <div style="flex:1;min-width:140px;">
                         <label>Ваш телефон</label>
-                        <input id="out_phone" placeholder="+7 (XXX) XXX-XX-XX">
+                        <input id="out_phone" placeholder="+7 (999) 123-45-67">
                     </div>
                     <div style="flex:1;min-width:140px;">
                         <label>Номер договора / чека / полиса</label>
@@ -246,6 +250,9 @@
                 <div class="field-label">Дополнительная информация <span class="example-link" onclick="fillExample('extra')">Пример</span></div>
                 <textarea id="out_extra" placeholder="Любые детали: свидетели, фото, видео, переписка."></textarea>
 
+                <div class="field-label">Правовые аргументы / Нарушенные нормы <span class="example-link" onclick="fillExample('laws')">Пример</span></div>
+                <textarea id="out_laws" placeholder="Какие законы или статьи нарушены. Если не знаете — оставьте пустым."></textarea>
+
                 <label>Сумма требований</label>
                 <input id="out_price" placeholder="Например: 5000">
 
@@ -268,26 +275,16 @@
             <div class="card dictionary">
                 <button class="dict-toggle" onclick="toggleDict()">📖 Словарь юридических терминов</button>
                 <div class="dict-content" id="dictContent">
-                    <p><span class="dict-term">Истец</span> — тот, кто подаёт в суд.</p>
-                    <p class="dict-def">Например: вы подали иск на магазин — вы истец.</p>
-                    <p><span class="dict-term">Ответчик</span> — тот, на кого подали в суд.</p>
-                    <p class="dict-def">Например: магазин, который не возвращает деньги.</p>
-                    <p><span class="dict-term">Претензия</span> — письменное требование к компании перед судом.</p>
-                    <p class="dict-def">Обязательный шаг перед подачей иска.</p>
-                    <p><span class="dict-term">Иск</span> — заявление в суд.</p>
-                    <p class="dict-def">Подаётся, если претензию проигнорировали.</p>
-                    <p><span class="dict-term">Ходатайство</span> — просьба к суду.</p>
-                    <p class="dict-def">Например: перенести заседание.</p>
-                    <p><span class="dict-term">Неустойка</span> — штраф за каждый день просрочки (1% от цены товара в день по ст. 23 ЗоЗПП).</p>
-                    <p class="dict-def">Начисляется, если продавец нарушил сроки возврата или ремонта.</p>
-                    <p><span class="dict-term">Роспотребнадзор</span> — защищает потребителей.</p>
-                    <p class="dict-def">Может оштрафовать магазин.</p>
-                    <p><span class="dict-term">ГЖИ</span> — Госжилинспекция.</p>
-                    <p class="dict-def">Следит за УК и коммунальщиками.</p>
-                    <p><span class="dict-term">Судебный приказ</span> — решение суда без заседания.</p>
-                    <p class="dict-def">Можно отменить в 10-дневный срок.</p>
-                    <p><span class="dict-term">Подсудность</span> — в какой суд подавать иск.</p>
-                    <p class="dict-def">Обычно по месту жительства ответчика или истца.</p>
+                    <p><span class="dict-term">Истец</span> — тот, кто подаёт в суд.</p><p class="dict-def">Например: вы подали иск на магазин — вы истец.</p>
+                    <p><span class="dict-term">Ответчик</span> — тот, на кого подали в суд.</p><p class="dict-def">Например: магазин, который не возвращает деньги.</p>
+                    <p><span class="dict-term">Претензия</span> — письменное требование к компании перед судом.</p><p class="dict-def">Обязательный шаг перед подачей иска.</p>
+                    <p><span class="dict-term">Иск</span> — заявление в суд.</p><p class="dict-def">Подаётся, если претензию проигнорировали.</p>
+                    <p><span class="dict-term">Ходатайство</span> — просьба к суду.</p><p class="dict-def">Например: перенести заседание.</p>
+                    <p><span class="dict-term">Неустойка</span> — штраф за каждый день просрочки (1% от цены товара в день по ст. 23 ЗоЗПП).</p><p class="dict-def">Начисляется, если продавец нарушил сроки возврата или ремонта.</p>
+                    <p><span class="dict-term">Роспотребнадзор</span> — защищает потребителей.</p><p class="dict-def">Может оштрафовать магазин.</p>
+                    <p><span class="dict-term">ГЖИ</span> — Госжилинспекция.</p><p class="dict-def">Следит за УК и коммунальщиками.</p>
+                    <p><span class="dict-term">Судебный приказ</span> — решение суда без заседания.</p><p class="dict-def">Можно отменить в 10-дневный срок.</p>
+                    <p><span class="dict-term">Подсудность</span> — в какой суд подавать иск.</p><p class="dict-def">Обычно по месту жительства ответчика или истца.</p>
                 </div>
             </div>
         </div>
@@ -310,7 +307,7 @@
                 <label>Ваш адрес</label>
                 <input id="inc_address" placeholder="г. Москва, ул. Примерная, д. 1">
                 <label>Дата входящего <span id="autoBadge3"></span></label>
-                <input id="inc_date" type="date" value="2026-05-18">
+                <input id="inc_date" type="date" value="2026-06-15">
                 <label>Суть требований <span id="autoBadge4"></span></label>
                 <textarea id="inc_demands" placeholder="Что от вас требуют и на каком основании"></textarea>
                 <label>Сумма требований <span id="autoBadge5"></span></label>
@@ -337,6 +334,7 @@
             <div class="watermark">Создано Александром Б.</div>
             <div class="result-text" id="resultText"></div>
         </div>
+        <div id="forecastContainer" style="display:none;"></div>
 
         <div class="card" style="margin-top:18px;">
             <div class="section-title">📋 Ваши документы</div>
@@ -344,7 +342,6 @@
         </div>
     </div>
 
-    <!-- Модальное окно калькулятора -->
     <div class="modal-overlay" id="calcModal">
         <div class="modal">
             <button class="modal-close" onclick="closeCalculator()">✕</button>
@@ -368,14 +365,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
     <script>
-        const API_KEY = 'ключ';
-        const BUY_EMAIL = 'alexandrnk2014@yandex.ru';
+        const API_KEY = 'sk-f6e401b63a4547a1ae1ca864ef35bbdc';
+        const BUY_EMAIL = 'alexandrnvk@icloud.com';
         let lastDocument = '';
         let activeTab = 'outgoing';
         let currentCategory = 'consumer';
         let detectedCourt = '';
         let calculatedPenalty = 0;
-        const FREE_LIMIT = 5;
+        const FREE_LIMIT = 10;
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
         function getUsageCount() { return parseInt(localStorage.getItem('usageCount') || '0'); }
@@ -387,12 +384,11 @@
             let bar = document.getElementById('limitBar');
             let btn = document.getElementById('btnAi');
             if (isLimitReached()) {
-                bar.innerHTML = '🔒 Лимит бесплатных документов исчерпан (5 из 5). <br><span style="color:#c0392b;">Приобретите полную версию.</span>';
+                bar.innerHTML = '🔒 Лимит исчерпан (10 из 10). <br><span style="color:#c0392b;">Приобретите полную версию.</span>';
                 btn.style.display = 'none';
                 if (!document.getElementById('btnBuy')) {
                     let buyBtn = document.createElement('button');
-                    buyBtn.id = 'btnBuy';
-                    buyBtn.className = 'btn-limit';
+                    buyBtn.id = 'btnBuy'; buyBtn.className = 'btn-limit';
                     buyBtn.textContent = '💬 Напишите нам для покупки';
                     buyBtn.onclick = function() { window.location.href = 'mailto:' + BUY_EMAIL + '?subject=Покупка полной версии'; };
                     btn.parentNode.insertBefore(buyBtn, btn.nextSibling);
@@ -400,8 +396,7 @@
             } else {
                 bar.innerHTML = '📊 Бесплатных документов: <span>' + used + '</span> из <span>' + FREE_LIMIT + '</span>';
                 btn.style.display = '';
-                let buyBtn = document.getElementById('btnBuy');
-                if (buyBtn) buyBtn.remove();
+                let buyBtn = document.getElementById('btnBuy'); if (buyBtn) buyBtn.remove();
             }
         }
 
@@ -432,15 +427,15 @@
         };
 
         const categoryHints = {
-            consumer: { what: 'Купил товар, отказали в возврате / товар сломался', who: 'Продавец Петрова, управляющий Батурин А.О.', answer: '«Ничем не можем помочь, ждите экспертизу»', extra: 'Чек сохранился, есть фото дефекта.', opponent: 'ООО «Название магазина»' },
-            insurance: { what: 'Попал в ДТП / страховая отказала в выплате', who: 'Виновник ДТП, сотрудник страховой Петрова', answer: '«У вас недостаточно документов»', extra: 'Номер полиса, дата ДТП, фото с места.', opponent: 'АО «Название страховой»' },
-            labor: { what: 'Задержали зарплату / незаконно уволили', who: 'Начальник Батурин А.О., директор Петров', answer: '«Денег нет, ждите»', extra: 'Дата увольнения, должность, размер зарплаты.', opponent: 'ООО «Работодатель»' },
-            court: { what: 'Подать ходатайство / отменить судебный приказ', who: 'Судья, ответчик, истец', answer: '', extra: 'Номер дела, дата заседания.', opponent: 'Мировой суд участка №...' },
-            gkh: { what: 'Затопило квартиру / нет отопления', who: 'Сотрудник УК Батурин А.О., председатель ТСЖ', answer: '«У нас нет денег на ремонт»', extra: 'Адрес, дата аварии, фото, акт о заливе.', opponent: 'ООО «Название УК»' }
+            consumer: { what: 'Купил товар, отказали в возврате / товар сломался', who: 'Продавец Петрова, управляющий Батурин А.О.', answer: '«Ничем не можем помочь, ждите экспертизу»', extra: 'Чек сохранился, есть фото дефекта.', opponent: 'ООО «Название магазина»', laws: 'Ст. 18, 22, 23 Закона о защите прав потребителей' },
+            insurance: { what: 'Попал в ДТП / страховая отказала в выплате', who: 'Виновник ДТП, сотрудник страховой Петрова', answer: '«У вас недостаточно документов»', extra: 'Номер полиса, дата ДТП, фото с места.', opponent: 'АО «Название страховой»', laws: 'Ст. 12, 16.1, 21 Закона об ОСАГО' },
+            labor: { what: 'Задержали зарплату / незаконно уволили', who: 'Начальник Батурин А.О., директор Петров', answer: '«Денег нет, ждите»', extra: 'Дата увольнения, должность, размер зарплаты.', opponent: 'ООО «Работодатель»', laws: 'Ст. 142, 236, 392 ТК РФ' },
+            court: { what: 'Подать ходатайство / отменить судебный приказ', who: 'Судья, ответчик, истец', answer: '', extra: 'Номер дела, дата заседания.', opponent: 'Мировой суд участка №...', laws: 'Ст. 35, 57, 131, 166 ГПК РФ' },
+            gkh: { what: 'Затопило квартиру / нет отопления / начисляют по среднему', who: 'Сотрудник УК Батурин А.О., председатель ТСЖ', answer: '«У нас нет денег на ремонт» / «Счётчики не опломбированы»', extra: 'Адрес, дата аварии, фото, акт о заливе.', opponent: 'ООО «Название УК»', laws: 'Ст. 157 ЖК РФ, п. 81 ПП РФ №354, ст. 10 Закона о защите конкуренции' }
         };
 
         const courtDB = {
-            'москва': 'в районный суд г. Москвы','санкт-петербург': 'в районный суд г. Санкт-Петербурга','екатеринбург': 'в районный суд г. Екатеринбурга','новосибирск': 'в районный суд г. Новосибирска','казань': 'в районный суд г. Казани','краснодар': 'в районный суд г. Краснодара','ростов': 'в районный суд г. Ростова-на-Дону','самара': 'в районный суд г. Самары','воронеж': 'в районный суд г. Воронежа','нижний новгород': 'в районный суд г. Нижнего Новгорода'
+            'москва': 'в районный суд г. Москвы','санкт-петербург': 'в районный суд г. Санкт-Петербурга','екатеринбург': 'в районный суд г. Екатеринбурга','новосибирск': 'в районный суд г. Новосибирска','казань': 'в районный суд г. Казани','краснодар': 'в районный суд г. Краснодара','ростов-на-дону': 'в районный суд г. Ростова-на-Дону','ростов': 'в районный суд г. Ростова-на-Дону','самара': 'в районный суд г. Самары','воронеж': 'в районный суд г. Воронежа','нижний новгород': 'в районный суд г. Нижнего Новгорода','челябинск': 'в районный суд г. Челябинска','омск': 'в районный суд г. Омска','уфа': 'в районный суд г. Уфы','красноярск': 'в районный суд г. Красноярска','пермь': 'в районный суд г. Перми','волгоград': 'в районный суд г. Волгограда','саратов': 'в районный суд г. Саратова','тюмень': 'в районный суд г. Тюмени','ижевск': 'в районный суд г. Ижевска','барнаул': 'в районный суд г. Барнаула','ульяновск': 'в районный суд г. Ульяновска','иркутск': 'в районный суд г. Иркутска','хабаровск': 'в районный суд г. Хабаровска','владивосток': 'в районный суд г. Владивостока','ярославль': 'в районный суд г. Ярославля','томск': 'в районный суд г. Томска','оренбург': 'в районный суд г. Оренбурга','кемерово': 'в районный суд г. Кемерово','рязань': 'в районный суд г. Рязани','астрахань': 'в районный суд г. Астрахани','пенза': 'в районный суд г. Пензы','липецк': 'в районный суд г. Липецка','тула': 'в районный суд г. Тулы','киров': 'в районный суд г. Кирова','чебоксары': 'в районный суд г. Чебоксары','калининград': 'в районный суд г. Калининграда','брянск': 'в районный суд г. Брянска','курск': 'в районный суд г. Курска','тверь': 'в районный суд г. Твери','ставрополь': 'в районный суд г. Ставрополя','белгород': 'в районный суд г. Белгорода','архангельск': 'в районный суд г. Архангельска','владимир': 'в районный суд г. Владимира','калуга': 'в районный суд г. Калуги','смоленск': 'в районный суд г. Смоленска','сочи': 'в районный суд г. Сочи','сургут': 'в районный суд г. Сургута','махачкала': 'в районный суд г. Махачкалы','грозный': 'в районный суд г. Грозного'
         };
 
         function fillExample(type) {
@@ -449,6 +444,7 @@
             if (type === 'who') { el = document.getElementById('out_who'); val = h.who; }
             if (type === 'answer') { el = document.getElementById('out_answer'); val = h.answer; }
             if (type === 'extra') { el = document.getElementById('out_extra'); val = h.extra; }
+            if (type === 'laws') { el = document.getElementById('out_laws'); val = h.laws; }
             if (el && val) {
                 el.value = val; el.classList.add('example-text');
                 el.addEventListener('input', function handler() { el.classList.remove('example-text'); el.removeEventListener('input', handler); }, { once: true });
@@ -464,11 +460,12 @@
             document.getElementById('out_who').placeholder = h.who;
             document.getElementById('out_answer').placeholder = h.answer || 'Что вам ответили?';
             document.getElementById('out_extra').placeholder = h.extra;
+            document.getElementById('out_laws').placeholder = h.laws || 'Какие нормы нарушены?';
             document.getElementById('opponentHint').textContent = 'Например: ' + (h.opponent || '');
         }
 
         function autoSaveDraft() {
-            let draft = { category: currentCategory, docType: document.getElementById('out_docType').value, myName: document.getElementById('out_myName').value, phone: document.getElementById('out_phone').value, docNumber: document.getElementById('out_docNumber').value, myAddress: document.getElementById('out_myAddress').value, opponent: document.getElementById('out_opponent').value, what: document.getElementById('out_what').value, where: document.getElementById('out_where').value, when: document.getElementById('out_when').value, who: document.getElementById('out_who').value, answer: document.getElementById('out_answer').value, extra: document.getElementById('out_extra').value, price: document.getElementById('out_price').value, goal: document.getElementById('out_goal').value, evidence: document.getElementById('out_evidence').value };
+            let draft = { category: currentCategory, docType: document.getElementById('out_docType').value, myName: document.getElementById('out_myName').value, phone: document.getElementById('out_phone').value, docNumber: document.getElementById('out_docNumber').value, myAddress: document.getElementById('out_myAddress').value, opponent: document.getElementById('out_opponent').value, what: document.getElementById('out_what').value, where: document.getElementById('out_where').value, when: document.getElementById('out_when').value, who: document.getElementById('out_who').value, answer: document.getElementById('out_answer').value, extra: document.getElementById('out_extra').value, laws: document.getElementById('out_laws').value, price: document.getElementById('out_price').value, goal: document.getElementById('out_goal').value, evidence: document.getElementById('out_evidence').value };
             localStorage.setItem('legalDraft', JSON.stringify(draft));
         }
 
@@ -491,6 +488,7 @@
             document.getElementById('out_who').value = draft.who || '';
             document.getElementById('out_answer').value = draft.answer || '';
             document.getElementById('out_extra').value = draft.extra || '';
+            document.getElementById('out_laws').value = draft.laws || '';
             document.getElementById('out_price').value = draft.price || '';
             document.getElementById('out_goal').value = draft.goal || '';
             if (draft.evidence) document.getElementById('out_evidence').value = draft.evidence;
@@ -510,15 +508,20 @@
         }
 
         function detectCourt() {
-            let addr = document.getElementById('out_myAddress').value.toLowerCase(); let hint = document.getElementById('courtHint'); detectedCourt = '';
+            let addr = document.getElementById('out_myAddress').value.toLowerCase();
+            let hint = document.getElementById('courtHint'); detectedCourt = '';
             if (!addr) { hint.textContent = ''; return; }
-            for (let [city, court] of Object.entries(courtDB)) { if (addr.includes(city)) { detectedCourt = court; hint.textContent = '📍 Суд: ' + court; return; } }
-            detectedCourt = 'в районный суд по вашему адресу'; hint.textContent = '📍 Обратитесь в районный суд по вашему адресу.';
+            let cityMatch = addr.match(/(?:г\.|город)\s*([А-ЯЁа-яё\s-]+?)(?:,|$|ул|д\.|пр)/i);
+            let searchStr = cityMatch ? cityMatch[1].trim().toLowerCase() : addr.toLowerCase();
+            for (let [city, court] of Object.entries(courtDB)) {
+                if (searchStr.includes(city) || addr.includes(city)) { detectedCourt = court; hint.textContent = '📍 Суд: ' + court; return; }
+            }
+            detectedCourt = 'в районный суд по вашему адресу';
+            hint.textContent = '📍 Обратитесь в районный суд по вашему адресу. Уточните на сайте ГАС «Правосудие».';
         }
 
         function toggleDict() { document.getElementById('dictContent').classList.toggle('open'); }
 
-        // Калькулятор в модальном окне
         function openCalculator() { document.getElementById('calcModal').classList.add('open'); document.getElementById('calc_debt').focus(); }
         function closeCalculator() { document.getElementById('calcModal').classList.remove('open'); }
         function calcPenalty() {
@@ -534,13 +537,13 @@
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             if (tab === 'incoming') { document.querySelectorAll('.tab')[1].classList.add('active'); document.getElementById('tab-incoming').classList.add('active'); }
             else { document.querySelectorAll('.tab')[0].classList.add('active'); document.getElementById('tab-outgoing').classList.add('active'); }
-            document.getElementById('status').textContent = ''; document.getElementById('result').style.display = 'none';
+            document.getElementById('status').textContent = ''; document.getElementById('result').style.display = 'none'; document.getElementById('forecastContainer').style.display = 'none';
         }
 
         function clearForm() {
             document.querySelectorAll('#tab-outgoing input[type="text"], #tab-outgoing textarea').forEach(el => { el.value = ''; el.classList.remove('error-field','example-text'); });
             document.getElementById('out_evidence').value = 'receipt'; document.getElementById('courtHint').textContent = '';
-            document.getElementById('status').textContent = ''; document.getElementById('result').style.display = 'none';
+            document.getElementById('status').textContent = ''; document.getElementById('result').style.display = 'none'; document.getElementById('forecastContainer').style.display = 'none';
             ['btnPdf','btnPrint','btnCopy','btnEmail'].forEach(id => document.getElementById(id).disabled = true);
             lastDocument = ''; detectedCourt = ''; calculatedPenalty = 0;
             document.getElementById('calc_debt').value = ''; document.getElementById('calc_days').value = ''; document.getElementById('calcResult').textContent = '';
@@ -638,13 +641,33 @@
             btnOcr.disabled = false;
         }
 
+        function generateRuleBasedForecast() {
+            const what = document.getElementById('out_what').value.trim();
+            const when = document.getElementById('out_when').value.trim();
+            const evidence = document.getElementById('out_evidence').value;
+            const laws = document.getElementById('out_laws').value.trim();
+            const answer = document.getElementById('out_answer').value.trim();
+            const category = currentCategory;
+            let forecastText = ''; let forecastLevel = 'medium';
+            if (category === 'consumer' && what && when && evidence !== 'none') {
+                if (when.includes('дней') || when.includes('дня') || when.includes('14')) { forecastText = 'Ситуация урегулирована ст. 18 Закона о ЗПП. При наличии подтверждения покупки и соблюдении срока вероятность возврата денег очень высока.'; forecastLevel = 'high'; }
+                else { forecastText = 'Недостаточно данных о сроках. Рекомендуется уточнить дату покупки.'; forecastLevel = 'medium'; }
+            } else if (category === 'insurance' && answer && evidence === 'none') { forecastText = 'Отказ страховой без документов сложно оспорить.'; forecastLevel = 'low'; }
+            else if (category === 'labor' && evidence === 'none') { forecastText = 'Без документов доказать задержку зарплаты сложно.'; forecastLevel = 'low'; }
+            else if (category === 'gkh' && laws.length > 0) { forecastText = 'Наличие ссылок на нормативные акты усиливает позицию.'; forecastLevel = 'high'; }
+            else if (laws.length > 0) { forecastText = 'Указаны правовые аргументы. Шансы средние или выше.'; forecastLevel = 'medium'; }
+            else { forecastText = 'Однозначный прогноз дать сложно.'; forecastLevel = 'medium'; }
+            const container = document.getElementById('forecastContainer');
+            container.style.display = 'block';
+            container.innerHTML = `<div class="forecast-box"><div class="forecast-title">📊 Прогноз перспектив</div><div class="forecast-text"><span class="forecast-${forecastLevel}">${forecastLevel==='high'?'Высокая вероятность успеха':forecastLevel==='low'?'Низкая вероятность':'Средняя вероятность'}</span><br><br>${forecastText}</div><p style="font-size:12px;color:var(--text-light);margin-top:10px;">⚠️ Прогноз основан на типовых правилах и не является гарантией.</p></div>`;
+        }
+
         async function askAI() {
             if (activeTab === 'outgoing') { if (!validateForm()) return; if (!useOneRequest()) return; }
             let btnAi = document.getElementById('btnAi'); let status = document.getElementById('status'); let result = document.getElementById('result');
             ['btnPdf','btnPrint','btnCopy','btnEmail'].forEach(id => document.getElementById(id).disabled = true);
-            btnAi.disabled = true; btnAi.textContent = '⏳ Составляем...'; status.textContent = ''; result.style.display = 'none'; lastDocument = '';
+            btnAi.disabled = true; btnAi.textContent = '⏳ Составляем...'; status.textContent = ''; result.style.display = 'none'; document.getElementById('forecastContainer').style.display = 'none'; lastDocument = '';
             let docDisplayName, fullContext;
-
             if (activeTab === 'incoming') {
                 docDisplayName = 'Ответ на претензию';
                 fullContext = `Составь ответ на претензию:\nОтправитель: ${document.getElementById('inc_sender').value}\nПолучатель: ${document.getElementById('inc_receiver').value}\nАдрес: ${document.getElementById('inc_address').value}\nДата: ${document.getElementById('inc_date').value}\nСуть: ${document.getElementById('inc_demands').value}\nСумма: ${document.getElementById('inc_sum').value}\nТекст: ${document.getElementById('recognizedText').value.trim()}\nПозиция: ${document.getElementById('inc_position').value}`;
@@ -655,13 +678,14 @@
                 let phone = document.getElementById('out_phone').value.trim();
                 let docNumber = document.getElementById('out_docNumber').value.trim();
                 let situation = ['Что: ' + document.getElementById('out_what').value,'Где: ' + document.getElementById('out_where').value,'Когда: ' + document.getElementById('out_when').value,'Участники: ' + document.getElementById('out_who').value,'Ответ: ' + document.getElementById('out_answer').value,'Дополнительно: ' + document.getElementById('out_extra').value].join('\n');
+                let laws = document.getElementById('out_laws').value.trim();
+                let lawsInfo = laws ? `\n\nПРАВОВЫЕ АРГУМЕНТЫ:\n${laws}\nОБЯЗАТЕЛЬНО используй эти аргументы в «Мотивировке».` : '';
                 let courtInfo = detectedCourt ? `\nПодсудность: ${detectedCourt}` : '';
                 let phoneInfo = phone ? `\nТелефон: ${phone}` : '';
                 let docInfo = docNumber ? `\nНомер договора/чека/полиса: ${docNumber}` : '';
-                fullContext = `Составь "${docDisplayName}".\nФИО: ${document.getElementById('out_myName').value}${phoneInfo}${docInfo}\nАдрес: ${document.getElementById('out_myAddress').value}\nКому: ${document.getElementById('out_opponent').value}\n\nСитуация:\n${situation}\n\nСумма: ${document.getElementById('out_price').value || 'нет'} руб.\nЦель: ${document.getElementById('out_goal').value}\nДоказательства: ${evidenceText}${courtInfo}`;
+                fullContext = `Составь "${docDisplayName}".\nФИО: ${document.getElementById('out_myName').value}${phoneInfo}${docInfo}\nАдрес: ${document.getElementById('out_myAddress').value}\nКому: ${document.getElementById('out_opponent').value}\n\nСитуация:\n${situation}${lawsInfo}\n\nСумма: ${document.getElementById('out_price').value || 'нет'} руб.\nЦель: ${document.getElementById('out_goal').value}\nДоказательства: ${evidenceText}${courtInfo}`;
             }
-            fullContext += '\n\nВАЖНО: Если требование связано с возвратом товара, ремонтом или услугой по ЗоЗПП, обязательно укажи в документе: «В случае отказа или нарушения сроков удовлетворения требований продавец (исполнитель) обязан выплатить неустойку в размере 1% от цены товара (услуги) за каждый день просрочки на основании ст. 23 Закона о защите прав потребителей». Не используй символ *. Начинай сразу с текста.';
-
+            fullContext += '\n\nЕсли требование по ЗоЗПП — укажи неустойку 1% по ст. 23. Не используй *. Начинай сразу с текста.';
             try {
                 let response = await fetch('https://api.deepseek.com/v1/chat/completions', {
                     method: 'POST',
@@ -669,18 +693,18 @@
                     body: JSON.stringify({
                         model: 'deepseek-chat',
                         messages: [
-                            { role: 'system', content: 'Ты — юридический конструктор РФ. Если требование по ЗоЗПП — всегда добавляй предупреждение о неустойке 1% по ст. 23. Не используй *. Начинай сразу с заголовка.' },
+                            { role: 'system', content: 'Ты — юридический конструктор РФ. Если пользователь указал правовые аргументы — включи их в мотивировку. Если требование по ЗоЗПП — добавь неустойку 1% по ст. 23. Не используй *. Начинай сразу с заголовка.' },
                             { role: 'user', content: fullContext }
                         ],
-                        temperature: 0.3,
-                        max_tokens: 3000
+                        temperature: 0.3, max_tokens: 3000
                     })
                 });
                 if (!response.ok) { let err = await response.json(); throw new Error(err.error?.message || 'Ошибка: ' + response.status); }
                 let json = await response.json();
                 lastDocument = json.choices[0].message.content;
                 showResult(lastDocument); status.textContent = '✅ Документ готов.'; saveToHistory(lastDocument, docDisplayName);
-                window.scrollTo({ top: result.offsetTop - 80, behavior: 'smooth' });
+                generateRuleBasedForecast();
+                window.scrollTo({ top: document.getElementById('forecastContainer').offsetTop - 80, behavior: 'smooth' });
             } catch (error) { status.innerHTML = '<span class="error">Ошибка: ' + error.message + '</span>'; }
             btnAi.disabled = false; btnAi.textContent = '⚡ Сформировать документ';
         }
