@@ -377,7 +377,7 @@
 
         function getUsageCount() { return parseInt(localStorage.getItem('usageCount') || '0'); }
         function incrementUsage() { let c = getUsageCount() + 1; localStorage.setItem('usageCount', c); return c; }
-        function isLimitReached() { return getUsageCount() >= FREE_LIMIT; }
+        function isLimitReached() { return getUsageCount() >= FREE_LIMIT = 999999; }
 
         function updateLimitUI() {
             let used = getUsageCount();
